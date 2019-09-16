@@ -11,7 +11,7 @@
 - 本插件下载地址:[https://github.com/qiaoanqiao/codevar/releases](https://github.com/qiaoanqiao/codevar/releases)
 选择最高版本下载即可
 
-###升级方式:
+### 升级方式:
 如果在之后的使用中. 感觉不爽了.点击插件作者链接, 然后进入插件下载地址. 看看有没有新版本吧
 如果你有什么建议欢迎提出
 

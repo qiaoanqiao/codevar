@@ -41,7 +41,6 @@ var config = {
 
 function translationFilter(str) {
     return str.split(' ')
-
 }
 
 function dtFilter(str) {
@@ -87,7 +86,8 @@ function xhFilter(str) {
 }
 
 var style = function (str) {
-    str = str.replace(/(and|or|the|a|at|of|was)/igu, ' ');
+    let strArr = str.toLowerCase();
+    str = str.replace(/^(and|or|the|at|of|was)/igu, ' ');
     str = str.replace(/(ing|ed|ly)$/igu, '');
     switch (model) {
         case 'xt': {
@@ -163,18 +163,18 @@ var keyboard = function () {
                 return false;
             }
             if (keyCode === 40) {
-                console.log('按了下键');
+                // console.log('按了下键');
                 downMove();
                 return false;
             }
             if (keyCode === 38) {
-                console.log('按了上键');
+                // console.log('按了上键');
                 upMove();
                 return false;
 
             }
             if (keyCode === 13) {
-                console.log('按了回车');
+                // console.log('按了回车');
                 enter();
                 return false;
             }
