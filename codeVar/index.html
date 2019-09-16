@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <script src="assets/jquery-3.3.1.min.js"></script>
+
+    <title>codeVar</title>
+    <style>
+        html, body, div, ul, li, h1, h2, h3, h4, h5, h6, p, dl, dt, dd, ol, form, input, textarea, th, td, select {
+            margin: 0;
+            padding: 0;
+        }
+        body{
+            background: #E9E9E8;
+
+        }
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        body {
+            -ms-overflow-style: none;
+        }
+        html {
+            overflow: -moz-hidden-unscrollable; /*注意！若只打 hidden，chrome 的其它 hidden 会出问题*/
+            height: 100%;
+        }
+
+        body {
+            height: 100%;
+            width: calc(100vw + 18px); /*浏览器滚动条的长度大约是 18px*/
+            overflow: auto;
+        }
+
+        div {
+            width: 100%;
+        }
+
+        h2 {
+            font: 400 40px/1.5 Helvetica, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        ul {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+        }
+
+        li {
+            font: 200 20px/1.5 Helvetica, Verdana, sans-serif;
+            border-bottom: 1px solid #ccc;
+        }
+
+        li:last-child {
+            border: none;
+        }
+
+        li a {
+            text-decoration: none;
+            color: #161616;
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 5px;
+
+            -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -o-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
+            transition: font-size 0.3s ease, background-color 0.3s ease;
+        }
+        li span {
+            text-decoration: none;
+            font: 200 15px/1.5 Helvetica, Verdana, sans-serif;
+            color: #979895;
+            display: block;
+            width: 100%;
+
+            -webkit-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -moz-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -o-transition: font-size 0.3s ease, background-color 0.3s ease;
+            -ms-transition: font-size 0.3s ease, background-color 0.3s ease;
+            transition: font-size 0.3s ease, background-color 0.3s ease;
+        }
+        li a:hover{
+            font-size: 30px;
+            color: #EFFEFF;
+            background: #2D6BDE;
+        }
+        .movelist {
+            font-size: 30px;
+            color: #EFFEFF;
+            background: #2D6BDE;
+        }
+        .translationDom{
+
+        }
+        .none{
+            display: none;
+        }
+        .logding{
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+<div>
+    <ul id="var-list"></ul>
+    <h3 id="noneData" class="none">没有匹配结果...</h3>
+    <h3 id="logding" class="logding">请求翻译结果中...</h3>
+</div>
+<script>
+    document.onkeydown = function(evt) {
+        evt = evt || window.event;
+        var keyCode = evt.keyCode;
+        if (keyCode >= 37 && keyCode <= 40) {
+            return false;
+        }
+    };
+</script>
+</body>
+
+</html>
