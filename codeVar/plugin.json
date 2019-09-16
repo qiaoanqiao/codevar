@@ -1,6 +1,6 @@
 {
     "pluginName": "翻译变量命名",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "使用翻译进行变量格式化命名.",
 
     "author": "乔安",
