@@ -8,6 +8,32 @@ var dataCount = 0; //翻译结果数量
 const {clipboard} = require('electron');
 const convert = require('./function/convert.js');
 const config = require('./config.js');
+const UpdateChecker = require('./function/UpdateChecker');
+const version = '0.0.5';//todo 每次更新时更新
+
+
+var updateCheck = function () {
+    //升级检测
+    // let lastCheckUpTime = utools.db.get('update');
+    // if (lastCheckUpTime === null) {
+    //     lastCheckUpTime = timest();
+    // }
+    // if ((timest - lastCheckUpTime) >= 86400) {
+        utools.db.put({_id: 'update', time: timest});
+        var userOrOrgName = "qiaoanqiao";
+        var repoName = "codevar";
+        var checker = UpdateChecker.createNew(userOrOrgName, repoName, version);
+        checker.hasNewVersion(function (result) {
+            let url = 'https://github.com/qiaoanqiao/codevar/releases/latest';
+            clipboard.writeText(url, 'selection');
+            console.log(result);
+            if (result) {
+                utools.showNotification('变量快速翻译命名插件 有新版本.版本下载链接已复制到剪切板', clickFeatureCode = 'xt', silent = false)
+                // checker.openBrowserToReleases();
+            }
+        });
+    // }
+};
 
 var style = function (str) {
     let strArr = str.toLowerCase();
@@ -33,6 +59,7 @@ var style = function (str) {
     return str;
 };
 utools.onPluginEnter(({code, type, payload}) => {
+    updateCheck();
     model = payload;
     utools.setExpendHeight(500);
     var promptText = '';
@@ -97,6 +124,13 @@ var keyDownTimer = function (time = 1000) {
     }, time);
 };
 var isMouseenter = false;
+
+function timest() {
+    var tmp = Date.parse(new Date()).toString();
+    tmp = tmp.substr(0, 10);
+    return tmp;
+}
+
 /**
  * 键盘事件注册
  */
@@ -289,6 +323,10 @@ function enter(key) {
     }
     if (isMac()) {
         utools.robot.keyToggle("v", "down", "command");
+    }
+    //linux
+    if ((!isMac()) && (!isWindows())) {
+        utools.robot.keyToggle("v", "down", "control");
     }
     //二次打开剪切板有影响
     // clipboard.writeText('', 'selection');

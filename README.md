@@ -1,7 +1,7 @@
 # codevar
 [utools](https://u.tools/) 变量快速翻译命名插件
 输入 xt(小驼峰) dt(大驼峰) xh(下划线) cl(常亮)
-用键盘上下 选择然后回车 或者 鼠标点击选择来自动复制.
+用键盘上下 选择然后回车 或者 鼠标点击选择来自动放入剪切板,并自动执行粘贴.
 
 ![演示](https://raw.githubusercontent.com/qiaoanqiao/codevar/develop/introduce.gif)
 

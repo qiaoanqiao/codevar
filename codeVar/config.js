@@ -1,3 +1,4 @@
+
 var config = {
     youDaoApi: 'http://fanyi.youdao.com/openapi.do',
     params: {
