@@ -3,7 +3,9 @@
 输入 xt(小驼峰) dt(大驼峰) xh(下划线) cl(常亮)
 用键盘上下 选择然后回车 或者 鼠标点击选择来自动复制.
 
-安装方式:
+![演示](https://raw.githubusercontent.com/qiaoanqiao/codevar/develop/introduce.gif)
+
+### 安装方式:
 下载后复制文件 upx 然后打开(唤出)Utools 粘贴到输入框中
 然后回车,根据提示安装即可
 
@@ -19,7 +21,7 @@
 - 本插件下载地址:[https://github.com/qiaoanqiao/codevar/releases](https://github.com/qiaoanqiao/codevar/releases)
 选择最高版本下载即可
 
-###升级方式:
+### 升级方式:
 如果在之后的使用中. 感觉不爽了.点击插件作者链接, 然后进入插件下载地址. 看看有没有新版本吧
 如果你有什么建议欢迎提出
 
