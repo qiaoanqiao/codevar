@@ -4,106 +4,29 @@ var timerRunner = false; //需要抢夺的定时器
 var renderData = []; //返回内容
 var thisKey = 0; //当前选择列
 var dataCount = 0; //翻译结果数量
-const { clipboard } = require('electron');
 
-var notice = function (body) {
-    let myNotification = new Notification('标题', {
-        body: body
-    })
-};
-
-
-var config = {
-    youDaoApi: 'http://fanyi.youdao.com/openapi.do',
-    params: {
-        query: {
-            keyfrom: 'CoderVar',
-            key: '802458398',
-            type: 'data',
-            doctype: 'json',
-            version: '1.1',
-            q: '',
-        }
-    },
-    filter: {
-        prep: [
-            'and', 'or', 'the', 'a', 'at', 'of'
-        ],
-        prefix: [],
-        suffix: [
-            'ing', 'ed', 'ly'
-        ],
-        verb: [
-            'was'
-        ]
-    }
-}
-
-function translationFilter(str) {
-    return str.split(' ')
-}
-
-function dtFilter(str) {
-    var strArr = translationFilter(str);
-    // 首单词首小写
-    strArr[0] = strArr[0].toLowerCase();
-    strArr[0] = strArr[0].charAt(0).toUpperCase() + strArr[0].substring(1);
-    // 单词首字母大写
-    for (let i = 1; i < strArr.length; i++) {
-        strArr[i] = strArr[i].charAt(0).toUpperCase() + strArr[i].substring(1);
-    }
-    return strArr.join('');
-
-}
-
-function xtFilter(str) {
-    var strArr = translationFilter(str);
-    // 首单词首小写
-    strArr[0] = strArr[0].toLowerCase();
-    // 单词首字母大写
-    for (let i = 1; i < strArr.length; i++) {
-        strArr[i] = strArr[i].charAt(0).toUpperCase() + strArr[i].substring(1);
-    }
-    return strArr.join('');
-
-}
-
-function clFilter(str) {
-    var strArr = translationFilter(str);
-    for (let i = 0; i < strArr.length; i++) {
-        strArr[i] = strArr[i].toUpperCase();
-    }
-    return strArr.join('_');
-
-}
-
-function xhFilter(str) {
-    var strArr = translationFilter(str);
-    for (let i = 0; i < strArr.length; i++) {
-        strArr[i] = strArr[i].toLowerCase();
-    }
-    return strArr.join('_');
-}
+const {clipboard} = require('electron');
+const convert = require('./function/convert.js');
+const config = require('./config.js');
 
 var style = function (str) {
     let strArr = str.toLowerCase();
-    str = str.replace(/^(and|or|the|at|of|was)/igu, ' ');
-    str = str.replace(/(ing|ed|ly)$/igu, '');
+
     switch (model) {
         case 'xt': {
-            str = xtFilter(str);
+            str = convert.xtFilter(str);
             break;
         }
         case 'dt': {
-            str = dtFilter(str);
+            str = convert.dtFilter(str);
             break;
         }
         case 'xh': {
-            str = xhFilter(str);
+            str = convert.xhFilter(str);
             break;
         }
         case 'cl': {
-            str = clFilter(str);
+            str = convert.clFilter(str);
             break;
         }
     }
@@ -140,18 +63,63 @@ utools.onPluginEnter(({code, type, payload}) => {
 
     }, promptText);
 });
+
+/** * 是否为mac系统（包含iphone手机） * */
+var isMac = function () {
+    return /macintosh|mac os x/i.test(navigator.userAgent);
+};
+
+
+/** * 是否为windows系统 * */
+var isWindows = function () {
+    return /windows|win32/i.test(navigator.userAgent);
+};
+
 var listDom = [];
+
+//是否已经注册过键盘按下事件
 var registerKeyDown = false;
+
+/**
+ * 重载滑过样式
+ */
+var reloadMoveStyle = function () {
+    $("#var-list").find("li").each(function (key, value) {
+        $(value).children("a").eq(0).removeClass('movelist');
+    });
+};
+var isKeyDown = false; //是否处于键盘按下(是否可以进行鼠标滑动事件)
+var keyDownTimer = function (time = 1000) {
+    setTimeout(function () {
+        if (isKeyDown === true) {
+            isKeyDown = false;
+        }
+    }, time);
+};
+var isMouseenter = false;
+/**
+ * 键盘事件注册
+ */
 var keyboard = function () {
     $("#var-list").find("li").each(function (key, value) {
-        value.onclick = function(){
+        $(value).click(function () {
             enter(key);
-        };
+        });
+        // $(value).onMouseMove()
+        $(value).mouseenter(function () {
+            if (isKeyDown === false && isMouseenter === true) {
+                reloadMoveStyle();
+                $(value).children("a").eq(0).addClass('movelist');
+                thisKey = key;
+            }
+            isMouseenter = true;
+        });
     });
-    if(registerKeyDown === false) {
+    if (registerKeyDown === false) {
         document.addEventListener('keydown', event => {
+            isKeyDown = true;
+            keyDownTimer();
             var keyCode = window.event ? event.keyCode : event.which;
-            console.log(keyCode);
             //屏蔽 Alt+ 方向键 ←,方向键 →
             for (var i = 49; i < 58; i++) {
                 if (keyCode === 16 && keyCode === i) {
@@ -164,17 +132,17 @@ var keyboard = function () {
             }
             if (keyCode === 40) {
                 // console.log('按了下键');
+                reloadMoveStyle();
                 downMove();
                 return false;
             }
             if (keyCode === 38) {
-                // console.log('按了上键');
+                reloadMoveStyle();
                 upMove();
                 return false;
 
             }
             if (keyCode === 13) {
-                // console.log('按了回车');
                 enter();
                 return false;
             }
@@ -213,8 +181,6 @@ function fanyi() {
         utools.setExpendHeight(600);
         domRendering(renderData);
 
-
-
         $("#var-list").find("li").find("a").each(function (key, value) {
             listDom[key] = value;
         });
@@ -223,62 +189,68 @@ function fanyi() {
 }
 
 var firstDown = true;
+
 /**
  * dom 元素重载
  */
-function domReload()
-{
+function domReload() {
     firstDown = true;
     $("#var-list").empty();
     thisKey = 0;
-    if(dataCount === 0) {
+    if (dataCount === 0) {
         utools.setExpendHeight(10);
         $("#noneData").removeClass("none");
     } else {
         $("#noneData").attr("class", "none");
     }
-    keyboard();
+    // keyboard();
 }
 
+
 function toReduceListOne() {
-    if(firstDown) {
-        thisKey = 0;
+    $("#var-list").find("li").each(function (key, value) {
+        $(value).removeClass('movelist');
+    });
+    if (firstDown && thisKey === 0) {
+        thisKey = dataCount - 1;
         window.scrollTo(0, document.body.scrollHeight);
         firstDown = false;
         return thisKey;
     }
-    if(thisKey <= 0) {
+    if (thisKey <= 0) {
         thisKey = dataCount - 1;
         window.scrollTo(0, document.body.scrollHeight);
         return thisKey;
     }
-    if(thisKey < 5) {
+    if (thisKey < 5) {
         window.scrollTo(0, 0);
     }
-    thisKey = thisKey -1;
+    thisKey = thisKey - 1;
     return thisKey;
 
 }
 
 function toAddListOne() {
-    if(firstDown) {
-        thisKey = 0;
+
+    if (firstDown && thisKey === 0) {
+        thisKey = 1;
         window.scrollTo(0, 0);
         firstDown = false;
         return thisKey;
     }
-    if(thisKey >= (dataCount - 1)) {
+    if (thisKey >= (dataCount - 1)) {
         thisKey = 0;
-        window.scrollTo(0,0);
+        window.scrollTo(0, 0);
         return thisKey;
     }
-    if(thisKey === 0) {
-        window.scrollTo(0,0);
+    if (thisKey === 0) {
+        window.scrollTo(0, 0);
     }
-    if(thisKey > 4) {
+    if (thisKey > 4) {
         window.scrollTo(0, document.body.scrollHeight);
     }
     thisKey = thisKey + 1;
+
     return thisKey;
 }
 
@@ -301,26 +273,45 @@ function upMove() {
 }
 
 function enter(key) {
-    if(key) {
-        var text = listDom[key].getAttribute('arg');
+    var text = '';
+    if (key) {
+        text = listDom[key].getAttribute('arg');
     } else {
-        var text = listDom[thisKey].getAttribute('arg');
+        text = listDom[thisKey].getAttribute('arg');
     }
 
-    console.log(text);
     clipboard.writeText(text, 'selection');
     utools.hideMainWindow();
+    utools.setSubInputValue('');
+    utools.outPlugin();
+    if (isWindows()) {
+        utools.robot.keyToggle("v", "down", "control");
+    }
+    if (isMac()) {
+        utools.robot.keyToggle("v", "down", "command");
+    }
+    //二次打开剪切板有影响
+    // clipboard.writeText('', 'selection');
 }
 
+/**
+ * dom 重载显示
+ * @param renderData
+ */
 function domRendering(renderData) {
-    for (var i = 0; i < renderData.length; i = i+1) {
+    for (var i = 0; i < renderData.length; i = i + 1) {
+
         var list = document.getElementById('var-list');
         var htmlliElement = document.createElement('li');
         var anchorElement = document.createElement('a');
         var spanElement = document.createElement('span');
+        if (i === 0) {
+            anchorElement.className = 'movelist';
+        }
         anchorElement.src = '#';
         anchorElement.text = renderData[i]['title'];
-        anchorElement.setAttribute("arg", renderData[i]['title']);;
+        anchorElement.setAttribute("arg", renderData[i]['title']);
+        ;
         anchorElement.classList.add('translationDom');
         // if (i === 0) {
         //     anchorElement.classList.add('movelist');
@@ -330,6 +321,9 @@ function domRendering(renderData) {
         htmlliElement.appendChild(anchorElement);
         list.appendChild(htmlliElement);
     }
+    keyDownTimer(1500);
+    keyboard();
+
 }
 
 var urlEncode = function (param, key, encode) {
@@ -345,8 +339,13 @@ var urlEncode = function (param, key, encode) {
         }
     }
     return paramStr;
-}
+};
 
+/**
+ * 接口返回数据过滤
+ * @param result
+ * @returns {Array}
+ */
 var dataToProcess = function (result) {
     //结果
     let result_value = [];
@@ -391,7 +390,7 @@ var dataToProcess = function (result) {
     }
 
     return result_value;
-}
+};
 
 
 
