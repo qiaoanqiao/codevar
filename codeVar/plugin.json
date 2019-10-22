@@ -1,6 +1,6 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "使用翻译进行变量格式化命名.",
 
     "author": "乔安",
