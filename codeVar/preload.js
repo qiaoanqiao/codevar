@@ -10,8 +10,6 @@ const convert = require('./function/convert.js');
 const config = require('./config.js');
 
 var style = function (str) {
-    let strArr = str.toLowerCase();
-
     switch (model) {
         case 'xt': {
             str = convert.xtFilter(str);
@@ -64,16 +62,6 @@ utools.onPluginEnter(({code, type, payload}) => {
     }, promptText);
 });
 
-/** * 是否为mac系统（包含iphone手机） * */
-var isMac = function () {
-    return /macintosh|mac os x/i.test(navigator.userAgent);
-};
-
-
-/** * 是否为windows系统 * */
-var isWindows = function () {
-    return /windows|win32/i.test(navigator.userAgent);
-};
 
 var listDom = [];
 
@@ -279,6 +267,17 @@ function upMove() {
     }
 }
 
+/** * 是否为mac系统（包含iphone手机） * */
+var isMac = function () {
+    return /macintosh|mac os x/i.test(navigator.userAgent);
+};
+
+
+/** * 是否为windows系统 * */
+var isWindows = function () {
+    return /windows|win32/i.test(navigator.userAgent);
+};
+
 function enter(key) {
     var text = '';
     if (key) {
@@ -293,13 +292,16 @@ function enter(key) {
     utools.outPlugin();
     if (isWindows()) {
         utools.robot.keyToggle("v", "down", "control");
+        utools.robot.keyToggle("v", "up", "control");
     }
     if (isMac()) {
         utools.robot.keyToggle("v", "down", "command");
+        utools.robot.keyToggle("v", "up", "command");
     }
     //linux
     if ((!isMac()) && (!isWindows())) {
         utools.robot.keyToggle("v", "down", "control");
+        utools.robot.keyToggle("v", "up", "control");
     }
     //二次打开剪切板有影响
     // clipboard.writeText('', 'selection');
@@ -322,11 +324,7 @@ function domRendering(renderData) {
         anchorElement.src = '#';
         anchorElement.text = renderData[i]['title'];
         anchorElement.setAttribute("arg", renderData[i]['title']);
-        ;
         anchorElement.classList.add('translationDom');
-        // if (i === 0) {
-        //     anchorElement.classList.add('movelist');
-        // }
         spanElement.innerHTML = renderData[i]['subtitle'];
         anchorElement.appendChild(spanElement);
         htmlliElement.appendChild(anchorElement);
@@ -334,9 +332,15 @@ function domRendering(renderData) {
     }
     keyDownTimer(1500);
     keyboard();
-
 }
 
+/**
+ * url 编码
+ * @param param
+ * @param key
+ * @param encode
+ * @returns {string}
+ */
 var urlEncode = function (param, key, encode) {
     if (param == null) return '';
     var paramStr = '';
@@ -363,8 +367,6 @@ var dataToProcess = function (result) {
     // 过滤中文
     let reg = /^[a-zA-Z ]/;
     // 标准翻译结果 : translation
-
-
     let result_translation = result.translation;
     if (result_translation) {
         for (let i = 0, len = result_translation.length; i < len; i++) {

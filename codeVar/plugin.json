@@ -1,6 +1,6 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "使用翻译进行变量格式化命名.",
 
     "author": "乔安",
@@ -12,7 +12,7 @@
         "code": "codeVar",
         "explain": "翻译中文为变量",
         "cmds": [
-            "xt", "dt", "xh", "cl"
+            "小驼峰", "大驼峰", "下划线", "常量","xt", "dt", "xh", "cl"
         ]
     }]
 }
