@@ -210,25 +210,45 @@ function inputTimeout() {
  */
 function fanyi() {
     config.params.query.q = userInput;
-    var queryStr = urlEncode(config.params.query);
-    url = config.youDaoApi + '?' + queryStr.slice(1);
+    var url = config.youDaoApi;
+    var stop = false;
+    for (var i = 0; i<config.key_max_step; i++ ) {
+        if(!stop) {
+            $.ajax({
+                url: url,
+                async:false,
+                data: config.params.query,
+                success: function (data) {
+                    if(parseInt(data.errorCode) === 0) {
+                        $("#noneData").attr("class", "none");
+                        // console.log(data);
+                        timerRunner = false;
 
-    $.get(url, function (data) {
-        $("#noneData").attr("class", "none");
-        // console.log(data);
-        timerRunner = false;
+                        renderData = dataToProcess(data);
+                        dataCount = renderData.length;
 
-        renderData = dataToProcess(data);
-        dataCount = renderData.length;
+                        domReload();
+                        utools.setExpendHeight(600);
+                        domRendering(renderData);
 
-        domReload();
-        utools.setExpendHeight(600);
-        domRendering(renderData);
+                        $("#var-list").find("li").find("a").each(function (key, value) {
+                            listDom[key] = value;
+                        });
+                        stop = true;
+                    } else {
+                        stop = false;
+                        if(!config.setNewKey()) {
+                            stop = true;
+                            utools.showNotification('哎呀, 没办法翻译了, 所有翻译 key 都无法使用!', null, false)
+                        }
+                    }
 
-        $("#var-list").find("li").find("a").each(function (key, value) {
-            listDom[key] = value;
-        });
-    });
+                },
+                dataType: "json"
+            });
+        }
+
+    }
 
 }
 
