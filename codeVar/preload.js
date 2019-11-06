@@ -9,6 +9,9 @@ const {clipboard} = require('electron');
 const convert = require('./function/convert.js');
 const config = require('./config.js');
 
+var auto_shutdown = 1;
+var auto_keyboard_shortcuts = 1;
+
 var style = function (str) {
     switch (model) {
         case 'xt': {
@@ -27,6 +30,22 @@ var style = function (str) {
             str = convert.clFilter(str);
             break;
         }
+        case '小驼峰': {
+            str = convert.xtFilter(str);
+            break;
+        }
+        case '大驼峰': {
+            str = convert.dtFilter(str);
+            break;
+        }
+        case '下划线': {
+            str = convert.xhFilter(str);
+            break;
+        }
+        case '常量': {
+            str = convert.clFilter(str);
+            break;
+        }
     }
     return str;
 };
@@ -34,6 +53,7 @@ utools.onPluginEnter(({code, type, payload}) => {
     model = payload;
     utools.setExpendHeight(500);
     var promptText = '';
+    dbTask();
     switch (model) {
         case 'xt': {
             promptText = '小驼峰命名法';
@@ -61,6 +81,35 @@ utools.onPluginEnter(({code, type, payload}) => {
 
     }, promptText);
 });
+
+var dbTask = async function()
+{
+    // let auto_shutdown_db = utools.db.get('auto_shutdown');
+    // if(auto_shutdown_db === 0) {
+    //     auto_shutdown = 0;
+    // }
+    // let auto_keyboard_shortcuts_db = utools.db.get('auto_keyboard_shortcuts');
+    // if(auto_keyboard_shortcuts_db === 0) {
+    //     auto_keyboard_shortcuts = 0;
+    // }
+
+    let use_number_db = utools.db.get('use_number');
+    let use_number = 0;
+    if( use_number_db !== null) {
+        use_number = use_number_db.num + 1;
+        utools.db.put({
+            _id: "use_number",
+            num: use_number,
+            _rev:use_number_db._rev,
+        });
+
+    } else {
+        utools.db.put({
+            _id: "use_number",
+            num: use_number,
+        });
+    }
+};
 
 
 var listDom = [];
@@ -285,24 +334,28 @@ function enter(key) {
     } else {
         text = listDom[thisKey].getAttribute('arg');
     }
-
     clipboard.writeText(text, 'selection');
-    utools.hideMainWindow();
+    if(auto_shutdown === 1) {
+        utools.hideMainWindow();
+    }
     utools.setSubInputValue('');
     utools.outPlugin();
-    if (isWindows()) {
-        utools.robot.keyToggle("v", "down", "control");
-        utools.robot.keyToggle("v", "up", "control");
+    if(auto_keyboard_shortcuts === 1) {
+        if (isWindows()) {
+            utools.robot.keyToggle("v", "down", "control");
+            utools.robot.keyToggle("v", "up", "control");
+        }
+        if (isMac()) {
+            utools.robot.keyToggle("v", "down", "command");
+            utools.robot.keyToggle("v", "up", "command");
+        }
+        //linux
+        if ((!isMac()) && (!isWindows())) {
+            utools.robot.keyToggle("v", "down", "control");
+            utools.robot.keyToggle("v", "up", "control");
+        }
     }
-    if (isMac()) {
-        utools.robot.keyToggle("v", "down", "command");
-        utools.robot.keyToggle("v", "up", "command");
-    }
-    //linux
-    if ((!isMac()) && (!isWindows())) {
-        utools.robot.keyToggle("v", "down", "control");
-        utools.robot.keyToggle("v", "up", "control");
-    }
+
     //二次打开剪切板有影响
     // clipboard.writeText('', 'selection');
 }
