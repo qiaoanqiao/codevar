@@ -220,10 +220,9 @@ function fanyi() {
                 data: config.params.query,
                 success: function (data) {
                     if(parseInt(data.errorCode) === 0) {
+                        stop = true;
                         $("#noneData").attr("class", "none");
-                        // console.log(data);
                         timerRunner = false;
-
                         renderData = dataToProcess(data);
                         dataCount = renderData.length;
 
@@ -234,7 +233,7 @@ function fanyi() {
                         $("#var-list").find("li").find("a").each(function (key, value) {
                             listDom[key] = value;
                         });
-                        stop = true;
+
                     } else {
                         stop = false;
                         if(!config.setNewKey()) {
@@ -243,6 +242,10 @@ function fanyi() {
                         }
                     }
 
+                },
+                error: function () {
+                    stop = true;
+                    utools.showNotification('哎呀, 请求失败! 没办法翻译了!', null, false)
                 },
                 dataType: "json"
             });
