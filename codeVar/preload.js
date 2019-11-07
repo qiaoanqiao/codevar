@@ -71,6 +71,22 @@ utools.onPluginEnter(({code, type, payload}) => {
             promptText = '常量命名法';
             break;
         }
+        case '小驼峰': {
+            promptText = '小驼峰命名法';
+            break;
+        }
+        case '大驼峰': {
+            promptText = '大驼峰命名法';
+            break;
+        }
+        case '下划线': {
+            promptText = '下划线命名法';
+            break;
+        }
+        case '常量': {
+            promptText = '常量命名法';
+            break;
+        }
     }
     utools.setSubInput(({text}) => {
         userInput = text;
