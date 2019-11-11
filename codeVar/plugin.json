@@ -1,18 +1,39 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.0.9",
+    "version": "0.1.0",
     "description": "使用翻译进行变量格式化命名.",
-
     "author": "乔安",
-    "homepage": "https://github.com/qiaoanqiao/codevar",
-    "main": "index.html",
+    "homepage": "https://www.fenxiangy.com",
     "preload": "preload.js",
     "logo": "logo.png",
-    "features": [{
-        "code": "codeVar",
-        "explain": "翻译中文为变量",
-        "cmds": [
-            "小驼峰", "大驼峰", "下划线", "常量","xt", "dt", "xh", "cl"
-        ]
-    }]
+    "features": [
+        {
+            "code": "big_hump",
+            "explain": "转换内容为大驼峰命名格式",
+            "cmds": [
+                "大驼峰", "dt"
+            ]
+        },
+        {
+            "code": "small_hump",
+            "explain": "转换内容为小驼峰命名格式",
+            "cmds": [
+                "小驼峰", "xt"
+            ]
+        },
+        {
+            "code": "underline",
+            "explain": "转换内容为下划线命名格式",
+            "cmds": [
+                "下划线", "xh"
+            ]
+        },
+        {
+            "code": "constant",
+            "explain": "转换内容为常量命名格式",
+            "cmds": [
+                "常量", "cl"
+            ]
+        }
+    ]
 }

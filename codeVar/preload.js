@@ -1,17 +1,199 @@
-let userInput = ''; //用户输入的内容
-var model; //用户选择的模式
 var timerRunner = false; //需要抢夺的定时器
-var renderData = []; //返回内容
-var thisKey = 0; //当前选择列
-var dataCount = 0; //翻译结果数量
-
 const {clipboard} = require('electron');
 const convert = require('./function/convert.js');
 const config = require('./config.js');
 
-var auto_shutdown = 1;
-var auto_keyboard_shortcuts = 1;
+var userAction = {
+    auto_shutdown:1,
+    auto_keyboard_shortcuts:1,
+};
+var model = '';
+var promptText = '请输入要转化的文字';
+var inputValue = '';
 
+var onload = function()
+{
+    var fundebug = require("fundebug-javascript");
+    fundebug.apikey = "20634a54043152c8d1a3a92054ad2412a1af0a591aaf11ed21ee5d046b4cb8d0";
+    dbTask();
+};
+
+var onSearch = function(action, searchWord, callbackSetList)
+{
+    try {
+        model = action.payload;
+        inputValue = searchWord;
+        let selectData = [];
+        if(inputValue !== '') {
+            if (timerRunner === false) {
+                callbackSetList([]);
+                timerRunner = true;
+                setTimeout(function () {
+                    timerRunner = false;
+                    selectData = getListData(action.payload);
+                    callbackSetList(selectData)
+                }, 1500);
+            }
+        }
+
+    } catch (e) {
+        console.log(e);
+        fundebug.notifyError(e);
+    }
+};
+
+var onEnter = function(action, callbackSetList) {
+    model = action.payload;
+    setPlaceholder(action.payload);
+    onload();
+    callbackSetList([]);
+};
+
+var onSelect = function(action, itemData) {
+    try {
+        enter(itemData.arg);
+    } catch (e) {
+        fundebug.notifyError(e);
+    }
+};
+
+window.exports = {
+    "big_hump": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    "small_hump": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    "underline": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    "constant": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+};
+
+
+var urlEncode = function(param, key, encode) {
+    if (param==null) return '';
+    var paramStr = '';
+    var t = typeof (param);
+    if (t == 'string' || t == 'number' || t == 'boolean') {
+        paramStr += '&' + key + '='  + ((encode==null||encode) ? encodeURIComponent(param) : param);
+    } else {
+        for (var i in param) {
+            var k = key == null ? i : key + (param instanceof Array ? '[' + i + ']' : '.' + i)
+            paramStr += urlEncode(param[i], k, encode)
+        }
+    }
+    return paramStr;
+};
+
+/**
+ * 获取处理后的列表数据.
+ * @returns {Array}
+ */
+var getListData = function()
+{
+    let returnData = [];
+    var url = config.youDaoApi;
+    var stop = false;
+    for (var i = 0; i<config.key_max_step; i++ ) {
+        if((!stop) && (inputValue !== '')) {
+            let xhr = null;
+            if (window.XMLHttpRequest) {
+                xhr = new XMLHttpRequest();
+            } else {
+                xhr = new ActiveXObject('MicroSoft.XMLHTTP');
+            }
+            stop = true;
+
+            let youDaoApiUrl = url + '?' + urlEncode(config.params.query) + '&q=' + inputValue;
+            xhr.open('GET', youDaoApiUrl, false);
+            xhr.setRequestHeader('Accept', 'application/json');
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send();
+            //6,通过状态确认完成
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                timerRunner = false;
+                //7,获取返回值，解析json格式字符串为对象
+
+                var data = JSON.parse(xhr.responseText);
+                if (parseInt(data.errorCode) === 0) {
+                    stop = true;
+                    returnData = dataToProcess(data);
+                } else {
+                    stop = false;
+                    if (!config.setNewKey()) {
+                        stop = true;
+                        utools.showNotification('哎呀, 没办法翻译了, 所有翻译 key 都无法使用!', null, false)
+                    }
+                }
+
+            } else {
+                if (!config.setNewKey()) {
+                    stop = true;
+                    utools.showNotification('哎呀, 翻译接口连接错误! 没办法翻译了!', null, false)
+                }
+            }
+        }
+    }
+
+    return returnData;
+};
+
+/**
+ * 格式化翻译字符
+ * @param str
+ * @returns {*}
+ */
 var style = function (str) {
     switch (model) {
         case 'xt': {
@@ -49,12 +231,15 @@ var style = function (str) {
     }
     return str;
 };
-utools.onPluginEnter(({code, type, payload}) => {
-    model = payload;
-    utools.setExpendHeight(500);
-    var promptText = '';
-    dbTask();
-    switch (model) {
+
+/**
+ * 设置子搜索placeholder
+ * @param payload 进入时模式
+ */
+var setPlaceholder = function(payload)
+{
+    promptText = '请输入';
+    switch (payload) {
         case 'xt': {
             promptText = '小驼峰命名法';
             break;
@@ -88,18 +273,54 @@ utools.onPluginEnter(({code, type, payload}) => {
             break;
         }
     }
-    utools.setSubInput(({text}) => {
-        userInput = text;
-        if (timerRunner === false) {
-            timerRunner = true;
-            setTimeout(inputTimeout, 2000);
-        }
+};
 
-    }, promptText);
-});
-
-var dbTask = async function()
+/**
+ * 安装通知
+ */
+var installNotice = function()
 {
+    var timestamp = (new Date()).valueOf();
+    let userName = process.env.USER;
+    if(userName === undefined) {
+        fundebug.notify('install', 'user:undefined' + ',time:' + timestamp);
+    } else {
+        fundebug.notify('install', 'user:' + userName + ',time:' + timestamp);
+    }
+
+
+
+};
+
+/**
+ * 数据库任务
+ */
+var dbTask = function()
+{
+    let user_data_db = utools.db.get('use_number');
+
+    let use_number = 0;
+    let install_notice = 1;
+    if( user_data_db !== null) {
+        use_number = user_data_db.num + 1;
+        if((user_data_db.install_notice === undefined) || (user_data_db.install_notice === 0)) {
+            installNotice();
+        }
+        utools.db.put({
+            _id: "use_number",
+            num: use_number,
+            install_notice:install_notice,
+            _rev:user_data_db._rev,
+        });
+
+    } else {
+        installNotice();
+        utools.db.put({
+            _id: "use_number",
+            install_notice:install_notice,
+            num: use_number,
+        });
+    }
     // let auto_shutdown_db = utools.db.get('auto_shutdown');
     // if(auto_shutdown_db === 0) {
     //     auto_shutdown = 0;
@@ -108,252 +329,24 @@ var dbTask = async function()
     // if(auto_keyboard_shortcuts_db === 0) {
     //     auto_keyboard_shortcuts = 0;
     // }
-
-    let use_number_db = utools.db.get('use_number');
-    let use_number = 0;
-    if( use_number_db !== null) {
-        use_number = use_number_db.num + 1;
-        utools.db.put({
-            _id: "use_number",
-            num: use_number,
-            _rev:use_number_db._rev,
-        });
-
-    } else {
-        utools.db.put({
-            _id: "use_number",
-            num: use_number,
-        });
-    }
-};
-
-
-var listDom = [];
-
-//是否已经注册过键盘按下事件
-var registerKeyDown = false;
-
-/**
- * 重载滑过样式
- */
-var reloadMoveStyle = function () {
-    $("#var-list").find("li").each(function (key, value) {
-        $(value).children("a").eq(0).removeClass('movelist');
-    });
-};
-var isKeyDown = false; //是否处于键盘按下(是否可以进行鼠标滑动事件)
-var keyDownTimer = function (time = 1000) {
-    setTimeout(function () {
-        if (isKeyDown === true) {
-            isKeyDown = false;
-        }
-    }, time);
-};
-var isMouseenter = false;
-
-function timest() {
-    var tmp = Date.parse(new Date()).toString();
-    tmp = tmp.substr(0, 10);
-    return tmp;
-}
-
-/**
- * 键盘事件注册
- */
-var keyboard = function () {
-    $("#var-list").find("li").each(function (key, value) {
-        $(value).click(function () {
-            enter(key);
-        });
-        // $(value).onMouseMove()
-        $(value).mouseenter(function () {
-            if (isKeyDown === false && isMouseenter === true) {
-                reloadMoveStyle();
-                $(value).children("a").eq(0).addClass('movelist');
-                thisKey = key;
-            }
-            isMouseenter = true;
-        });
-    });
-    if (registerKeyDown === false) {
-        document.addEventListener('keydown', event => {
-            isKeyDown = true;
-            keyDownTimer();
-            var keyCode = window.event ? event.keyCode : event.which;
-            //屏蔽 Alt+ 方向键 ←,方向键 →
-            for (var i = 49; i < 58; i++) {
-                if (keyCode === 16 && keyCode === i) {
-                    console.log("你按下了shift+" + i);
-                }
-            }
-            if ((keyCode === 37 || keyCode === 39)) {
-                event.returnValue = false;
-                return false;
-            }
-            if (keyCode === 40) {
-                // console.log('按了下键');
-                reloadMoveStyle();
-                downMove();
-                return false;
-            }
-            if (keyCode === 38) {
-                reloadMoveStyle();
-                upMove();
-                return false;
-
-            }
-            if (keyCode === 13) {
-                enter();
-                return false;
-            }
-        });
-        registerKeyDown = true;
-    }
+    // let use_number_db = utools.db.get('use_number');
+    // let use_number = 0;
+    // if( use_number_db !== null) {
+    //     use_number = use_number_db.num + 1;
+    //     utools.db.put({
+    //         _id: "use_number",
+    //         num: use_number,
+    //         _rev:use_number_db._rev,
+    //     });
+    //
+    // } else {
+    //     utools.db.put({
+    //         _id: "use_number",
+    //         num: use_number,
+    //     });
+    // }
 
 };
-
-
-function inputTimeout() {
-    if (timerRunner === true) {
-        $("#noneData").removeClass("none");
-
-        fanyi();
-    }
-}
-
-/**
- * 进行网络翻译
- */
-function fanyi() {
-    config.params.query.q = userInput;
-    var url = config.youDaoApi;
-    var stop = false;
-    for (var i = 0; i<config.key_max_step; i++ ) {
-        if(!stop) {
-            $.ajax({
-                url: url,
-                async:false,
-                data: config.params.query,
-                success: function (data) {
-                    if(parseInt(data.errorCode) === 0) {
-                        stop = true;
-                        $("#noneData").attr("class", "none");
-                        timerRunner = false;
-                        renderData = dataToProcess(data);
-                        dataCount = renderData.length;
-
-                        domReload();
-                        utools.setExpendHeight(600);
-                        domRendering(renderData);
-
-                        $("#var-list").find("li").find("a").each(function (key, value) {
-                            listDom[key] = value;
-                        });
-
-                    } else {
-                        stop = false;
-                        if(!config.setNewKey()) {
-                            stop = true;
-                            utools.showNotification('哎呀, 没办法翻译了, 所有翻译 key 都无法使用!', null, false)
-                        }
-                    }
-
-                },
-                error: function () {
-                    stop = true;
-                    utools.showNotification('哎呀, 请求失败! 没办法翻译了!', null, false)
-                },
-                dataType: "json"
-            });
-        }
-
-    }
-
-}
-
-var firstDown = true;
-
-/**
- * dom 元素重载
- */
-function domReload() {
-    firstDown = true;
-    $("#var-list").empty();
-    thisKey = 0;
-    if (dataCount === 0) {
-        utools.setExpendHeight(10);
-        $("#noneData").removeClass("none");
-    } else {
-        $("#noneData").attr("class", "none");
-    }
-    // keyboard();
-}
-
-
-function toReduceListOne() {
-    $("#var-list").find("li").each(function (key, value) {
-        $(value).removeClass('movelist');
-    });
-    if (firstDown && thisKey === 0) {
-        thisKey = dataCount - 1;
-        window.scrollTo(0, document.body.scrollHeight);
-        firstDown = false;
-        return thisKey;
-    }
-    if (thisKey <= 0) {
-        thisKey = dataCount - 1;
-        window.scrollTo(0, document.body.scrollHeight);
-        return thisKey;
-    }
-    if (thisKey < 5) {
-        window.scrollTo(0, 0);
-    }
-    thisKey = thisKey - 1;
-    return thisKey;
-
-}
-
-function toAddListOne() {
-
-    if (firstDown && thisKey === 0) {
-        thisKey = 1;
-        window.scrollTo(0, 0);
-        firstDown = false;
-        return thisKey;
-    }
-    if (thisKey >= (dataCount - 1)) {
-        thisKey = 0;
-        window.scrollTo(0, 0);
-        return thisKey;
-    }
-    if (thisKey === 0) {
-        window.scrollTo(0, 0);
-    }
-    if (thisKey > 4) {
-        window.scrollTo(0, document.body.scrollHeight);
-    }
-    thisKey = thisKey + 1;
-
-    return thisKey;
-}
-
-function downMove() {
-    if (dataCount > 0) {
-        listDom[thisKey].classList.remove('movelist');
-        toAddListOne();
-        listDom[thisKey].classList.add('movelist');
-        // listDom[thisKey].click();
-    }
-}
-
-function upMove() {
-    if (dataCount > 0) {
-        listDom[thisKey].classList.remove('movelist');
-        toReduceListOne();
-        listDom[thisKey].classList.add('movelist');
-        // listDom[thisKey].click();
-    }
-}
 
 /** * 是否为mac系统（包含iphone手机） * */
 var isMac = function () {
@@ -366,20 +359,14 @@ var isWindows = function () {
     return /windows|win32/i.test(navigator.userAgent);
 };
 
-function enter(key) {
-    var text = '';
-    if (key) {
-        text = listDom[key].getAttribute('arg');
-    } else {
-        text = listDom[thisKey].getAttribute('arg');
-    }
+function enter(text) {
     clipboard.writeText(text, 'selection');
-    if(auto_shutdown === 1) {
+    if(userAction.auto_shutdown === 1) {
         utools.hideMainWindow();
     }
     utools.setSubInputValue('');
     utools.outPlugin();
-    if(auto_keyboard_shortcuts === 1) {
+    if(userAction.auto_keyboard_shortcuts === 1) {
         if (isWindows()) {
             utools.robot.keyToggle("v", "down", "control");
             utools.robot.keyToggle("v", "up", "control");
@@ -397,33 +384,6 @@ function enter(key) {
 
     //二次打开剪切板有影响
     // clipboard.writeText('', 'selection');
-}
-
-/**
- * dom 重载显示
- * @param renderData
- */
-function domRendering(renderData) {
-    for (var i = 0; i < renderData.length; i = i + 1) {
-
-        var list = document.getElementById('var-list');
-        var htmlliElement = document.createElement('li');
-        var anchorElement = document.createElement('a');
-        var spanElement = document.createElement('span');
-        if (i === 0) {
-            anchorElement.className = 'movelist';
-        }
-        anchorElement.src = '#';
-        anchorElement.text = renderData[i]['title'];
-        anchorElement.setAttribute("arg", renderData[i]['title']);
-        anchorElement.classList.add('translationDom');
-        spanElement.innerHTML = renderData[i]['subtitle'];
-        anchorElement.appendChild(spanElement);
-        htmlliElement.appendChild(anchorElement);
-        list.appendChild(htmlliElement);
-    }
-    keyDownTimer(1500);
-    keyboard();
 }
 
 /**
@@ -465,8 +425,9 @@ var dataToProcess = function (result) {
             if (reg.test(result_translation[i])) {
                 result_value.push({
                     title: style(result_translation[i]),
-                    subtitle: `标准翻译 => ${result_translation[i]}`,
+                    description: `标准翻译 => ${result_translation[i]}`,
                     arg: style(result_translation[i]),
+                    icon:'',
                 });
             }
         }
@@ -482,8 +443,9 @@ var dataToProcess = function (result) {
                     if (reg.test(result_web[i].value[j])) {
                         result_value.push({
                             title: style(result_web[i].value[j]),
-                            subtitle: `网络翻译 => ${result_web[i].value[j]}`,
+                            description: `网络翻译 => ${result_web[i].value[j]}`,
                             arg: style(result_web[i].value[j]),
+                            icon:'',
                         });
                     }
                 }

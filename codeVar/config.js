@@ -76,7 +76,7 @@ var config = {
             type: 'data',
             doctype: 'json',
             version: '1.1',
-            q: '',
+            // q: '',
         }
     },
     filter: {
