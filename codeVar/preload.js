@@ -15,7 +15,6 @@ var onload = function()
 {
     var fundebug = require("fundebug-javascript");
     fundebug.apikey = "20634a54043152c8d1a3a92054ad2412a1af0a591aaf11ed21ee5d046b4cb8d0";
-    dbTask();
 };
 
 var onSearch = function(action, searchWord, callbackSetList)
@@ -273,79 +272,6 @@ var setPlaceholder = function(payload)
             break;
         }
     }
-};
-
-/**
- * 安装通知
- */
-var installNotice = function()
-{
-    var timestamp = (new Date()).valueOf();
-    let userName = process.env.USER;
-    if(userName === undefined) {
-        fundebug.notify('install', 'user:undefined' + ',time:' + timestamp);
-    } else {
-        fundebug.notify('install', 'user:' + userName + ',time:' + timestamp);
-    }
-
-
-
-};
-
-/**
- * 数据库任务
- */
-var dbTask = function()
-{
-    let user_data_db = utools.db.get('use_number');
-
-    let use_number = 0;
-    let install_notice = 1;
-    if( user_data_db !== null) {
-        use_number = user_data_db.num + 1;
-        if((user_data_db.install_notice === undefined) || (user_data_db.install_notice === 0)) {
-            installNotice();
-        }
-        utools.db.put({
-            _id: "use_number",
-            num: use_number,
-            install_notice:install_notice,
-            _rev:user_data_db._rev,
-        });
-
-    } else {
-        installNotice();
-        utools.db.put({
-            _id: "use_number",
-            install_notice:install_notice,
-            num: use_number,
-        });
-    }
-    // let auto_shutdown_db = utools.db.get('auto_shutdown');
-    // if(auto_shutdown_db === 0) {
-    //     auto_shutdown = 0;
-    // }
-    // let auto_keyboard_shortcuts_db = utools.db.get('auto_keyboard_shortcuts');
-    // if(auto_keyboard_shortcuts_db === 0) {
-    //     auto_keyboard_shortcuts = 0;
-    // }
-    // let use_number_db = utools.db.get('use_number');
-    // let use_number = 0;
-    // if( use_number_db !== null) {
-    //     use_number = use_number_db.num + 1;
-    //     utools.db.put({
-    //         _id: "use_number",
-    //         num: use_number,
-    //         _rev:use_number_db._rev,
-    //     });
-    //
-    // } else {
-    //     utools.db.put({
-    //         _id: "use_number",
-    //         num: use_number,
-    //     });
-    // }
-
 };
 
 /** * 是否为mac系统（包含iphone手机） * */
