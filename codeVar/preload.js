@@ -325,8 +325,12 @@ function enter(text) {
             utools.robot.keyToggle("v", "up", "command");
         }
         //other
-        utools.robot.keyToggle("v", "down", "control");
-        utools.robot.keyToggle("v", "up", "control");
+        if(!isMac() && !isWindows()) {
+            utools.robot.keyToggle("v", "down", "control");
+            utools.robot.keyToggle("v", "up", "control");
+        }
+
+
     }
 
     //二次打开剪切板有影响
