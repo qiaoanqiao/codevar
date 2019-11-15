@@ -102,6 +102,21 @@ window.exports = {
             placeholder: promptText,
         }
     },
+    "horizontal_line": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
     "constant": {
         mode: "list",
         args: {
@@ -207,6 +222,10 @@ var style = function (str) {
             str = convert.xhFilter(str);
             break;
         }
+        case 'hx': {
+            str = convert.hxFilter(str);
+            break;
+        }
         case 'cl': {
             str = convert.clFilter(str);
             break;
@@ -221,6 +240,10 @@ var style = function (str) {
         }
         case '下划线': {
             str = convert.xhFilter(str);
+            break;
+        }
+        case '横线': {
+            str = convert.hxFilter(str);
             break;
         }
         case '常量': {

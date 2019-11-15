@@ -1,6 +1,6 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "使用翻译进行变量格式化命名.",
     "author": "乔安",
     "homepage": "https://www.fenxiangy.com",
@@ -26,6 +26,13 @@
             "explain": "转换内容为下划线命名格式",
             "cmds": [
                 "下划线", "xh"
+            ]
+        },
+        {
+            "code": "horizontal_line",
+            "explain": "转换内容为横线命名格式",
+            "cmds": [
+                "横线", "hx"
             ]
         },
         {

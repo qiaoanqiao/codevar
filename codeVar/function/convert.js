@@ -40,6 +40,13 @@ var convert = {
         }
         return strArr.join('_');
     },
+    hxFilter(str) {
+        var strArr = translationFilter(str);
+        for (let i = 0; i < strArr.length; i++) {
+            strArr[i] = strArr[i].toLowerCase();
+        }
+        return strArr.join('-');
+    },
 
 };
 function translationFilter(str) {
