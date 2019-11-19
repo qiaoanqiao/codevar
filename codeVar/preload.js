@@ -10,6 +10,8 @@ var userAction = {
 var model = '';
 var promptText = '请输入要转化的文字';
 var inputValue = '';
+//输入延迟
+var inputLag = 350;
 
 var onload = function()
 {
@@ -31,7 +33,7 @@ var onSearch = function(action, searchWord, callbackSetList)
                     timerRunner = false;
                     selectData = getListData(action.payload);
                     callbackSetList(selectData)
-                }, 1500);
+                }, inputLag);
             }
         }
 
