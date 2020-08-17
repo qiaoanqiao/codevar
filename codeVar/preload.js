@@ -299,37 +299,29 @@ var setPlaceholder = function(payload)
     }
 };
 
-/** * 是否为mac系统（包含iphone手机） * */
-var isMac = function () {
-    return /macintosh|mac os x/i.test(navigator.userAgent);
-};
-
-
-/** * 是否为windows系统 * */
-var isWindows = function () {
-    return /windows|win32/i.test(navigator.userAgent);
-};
-
 function enter(text) {
-    clipboard.writeText(text, 'selection');
+    utools.copyText(text);
     if(userAction.auto_shutdown === 1) {
         utools.hideMainWindow();
     }
     utools.setSubInputValue('');
     utools.outPlugin();
     if(userAction.auto_keyboard_shortcuts === 1) {
-        if (isWindows()) {
-            utools.robot.keyToggle("v", "down", "control");
-            utools.robot.keyToggle("v", "up", "control");
+        if (utools.isWindows()) {
+            utools.simulateKeyboardTap('v', 'ctrl')
+            // utools.robot.keyToggle("v", "down", "control");
+            // utools.robot.keyToggle("v", "up", "control");
         }
-        if (isMac()) {
-            utools.robot.keyToggle("v", "down", "command");
-            utools.robot.keyToggle("v", "up", "command");
+        if (utools.isMacOs()) {
+            // utools.robot.keyToggle("v", "down", "command");
+            // utools.robot.keyToggle("v", "up", "command");
+            utools.simulateKeyboardTap('v', 'command')
         }
         //other
-        if(!isMac() && !isWindows()) {
-            utools.robot.keyToggle("v", "down", "control");
-            utools.robot.keyToggle("v", "up", "control");
+        if(utools.isLinux()) {
+            // utools.robot.keyToggle("v", "down", "control");
+            // utools.robot.keyToggle("v", "up", "control");
+            utools.simulateKeyboardTap('v', 'ctrl')
         }
 
 
