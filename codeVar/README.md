@@ -1,9 +1,9 @@
 # codevar
 [utools](https://u.tools/) 变量快速翻译命名插件
 输入 xt(小驼峰) dt(大驼峰) xh(下划线) hx(横线) cl(常亮)
-用键盘上下 选择然后回车 或者 鼠标点击选择来自动放入剪切板,并自动执行粘贴.
+用键盘上下 选择然后回车 或者 鼠标点击选择 或者 使用快捷键 来自动放入剪切板,并自动执行粘贴.
 
-![演示](http://ww1.sinaimg.cn/large/0076ZmKJly1g8m4bsr0hcg30tg0lywzi.gif)
+![演示](https://raw.githubusercontent.com/qiaoanqiao/codevar/master/introduce.gif)
 
 ## 安装方式:
 
@@ -31,6 +31,11 @@
 
 ## 升级日志
 ### 0.1.4
+1. 删除自己的恰饭渠道,使用赏金功能
+2. 更新演示图
+
+## 升级日志
+### 0.1.4
 1. 增加恰饭渠道
 
 ### 0.1.3
@@ -38,15 +43,5 @@
 1. 修复 **复制** 为贴合`utools` api 方式;
 2. 修复 **粘帖** 为贴合`utools` api方式
 
-## 赏金
-觉得这款插件不错的大老爷,支持扫码打赏啦. 你的打赏是我坚持的动力
+## 反馈
 邮箱:imhereyougone@163.com
-
-#### 支付宝
-![](http://ww1.sinaimg.cn/large/007xSf3gly1goklrcbcn3j30el0etjs5.jpg)
-
-#### 微信信
-![](http://ww1.sinaimg.cn/large/007xSf3gly1goklrjr11xj30fx0g940e.jpg)
-
-#### 支付宝红包
-![](http://ww1.sinaimg.cn/large/007xSf3gly1gokls8is34j314z1pxgxw.jpg)
