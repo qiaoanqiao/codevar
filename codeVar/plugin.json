@@ -1,9 +1,9 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.1.5",
+    "version": "0.1.7",
     "description": "使用翻译进行变量格式化命名.",
     "author": "乔安",
-    "homepage": "https://www.fenxiangy.com",
+    "homepage": "https://www.motouguai.com",
     "preload": "preload.js",
     "logo": "logo.png",
     "features": [
@@ -40,6 +40,20 @@
             "explain": "转换内容为常量命名格式",
             "cmds": [
                 "常量", "cl"
+            ]
+        },
+        {
+            "code": "whether_to_shut_down_automatical",
+            "explain": "切换变量快速翻译命名插件是否自动关闭设置",
+            "cmds": [
+                "变量快速翻译命名插件是否自动关闭"
+            ]
+        },
+        {
+            "code": "any_text_match",
+            "explain": "切换变量快速翻译命名插件是否任意文本匹配插件",
+            "cmds": [
+                "变量快速翻译命名插件是否任意文本匹配插件(可配合超级面板)"
             ]
         }
     ]

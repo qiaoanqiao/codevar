@@ -54,9 +54,6 @@ function translationFilter(str) {
     str = str.replace(/(\s?ing|\s?ed|\s?ly)$/igu, '');
     str = str.replace(/^(the )/igu, '');
 
-
-    // str = str.replace(/(\s?and\s?|\s?or\s?|\s?the\s?|\s?at\s?|\s?of\s?|\s?a\s?|\s?was\s?)/igu, ' ');
-    // str = str.replace(/(\s?ing|\s?ed|\s?ly)$/igu, '');
     return str.split(' ')
 }
 

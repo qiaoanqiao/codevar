@@ -2,7 +2,7 @@ var timerRunner = false; //需要抢夺的定时器
 const {clipboard} = require('electron');
 const convert = require('./function/convert.js');
 const config = require('./config.js');
-
+var switchInText = "";
 var userAction = {
     auto_shutdown:1,
     auto_keyboard_shortcuts:1,
@@ -12,6 +12,9 @@ var promptText = '请输入要转化的文字';
 var inputValue = '';
 //输入延迟
 var inputLag = 350;
+var mathSearchWord = "";
+var mathIsInSearch = false;
+var isMathFirst = true;
 
 var onload = function()
 {
@@ -19,10 +22,10 @@ var onload = function()
     fundebug.apikey = "20634a54043152c8d1a3a92054ad2412a1af0a591aaf11ed21ee5d046b4cb8d0";
 };
 
-var onSearch = function(action, searchWord, callbackSetList)
+var onSearch = function(modelF, searchWord, callbackSetList)
 {
     try {
-        model = action.payload;
+        model = modelF;
         inputValue = searchWord;
         let selectData = [];
         if(inputValue !== '') {
@@ -31,7 +34,7 @@ var onSearch = function(action, searchWord, callbackSetList)
                 timerRunner = true;
                 setTimeout(function () {
                     timerRunner = false;
-                    selectData = getListData(action.payload);
+                    selectData = getListData(modelF);
                     callbackSetList(selectData)
                 }, inputLag);
             }
@@ -58,6 +61,53 @@ var onSelect = function(action, itemData) {
     }
 };
 
+function switchOnEnter(action, callbackSetList) {
+    let result_value = [];
+    result_value.push({
+        title: "小驼峰命名格式",
+        description: "转换内容为小驼峰命名格式",
+        icon:'',
+    });
+    result_value.push({
+        title: "大驼峰命名格式",
+        description: "转换内容为大驼峰命名格式",
+        icon:'',
+    });
+    result_value.push({
+        title: "下划线命名格式",
+        description: "转换内容为下划线命名格式",
+        icon:'',
+    });
+    result_value.push({
+        title: "横线命名格式",
+        description: "转换内容为横线命名格式",
+        icon:'',
+    });
+    result_value.push({
+        title: "常量命名格式",
+        description: "转换内容为常量命名格式",
+        icon:'',
+    });
+    callbackSetList(result_value);
+}
+
+function titleSwitchGetModel(title) {
+    switch (title) {
+        case "小驼峰命名格式":
+            return "xt";
+        case "大驼峰命名格式":
+            return "dt";
+        case "下划线命名格式":
+            return "xh";
+        case "横线命名格式":
+            return "hx";
+        case "常量命名格式":
+            return "cl";
+        default:
+            return "";
+    }
+}
+
 window.exports = {
     "big_hump": {
         mode: "list",
@@ -66,7 +116,7 @@ window.exports = {
                 onEnter(action, callbackSetList);
             },
             search: (action, searchWord, callbackSetList) => {
-                onSearch(action, searchWord, callbackSetList);
+                onSearch(action.payload, searchWord, callbackSetList);
             },
             select: (action, itemData) => {
                 onSelect(action, itemData);
@@ -81,7 +131,7 @@ window.exports = {
                 onEnter(action, callbackSetList);
             },
             search: (action, searchWord, callbackSetList) => {
-                onSearch(action, searchWord, callbackSetList);
+                onSearch(action.payload, searchWord, callbackSetList);
             },
             select: (action, itemData) => {
                 onSelect(action, itemData);
@@ -96,7 +146,7 @@ window.exports = {
                 onEnter(action, callbackSetList);
             },
             search: (action, searchWord, callbackSetList) => {
-                onSearch(action, searchWord, callbackSetList);
+                onSearch(action.payload, searchWord, callbackSetList);
             },
             select: (action, itemData) => {
                 onSelect(action, itemData);
@@ -111,7 +161,7 @@ window.exports = {
                 onEnter(action, callbackSetList);
             },
             search: (action, searchWord, callbackSetList) => {
-                onSearch(action, searchWord, callbackSetList);
+                onSearch(action.payload, searchWord, callbackSetList);
             },
             select: (action, itemData) => {
                 onSelect(action, itemData);
@@ -126,7 +176,7 @@ window.exports = {
                 onEnter(action, callbackSetList);
             },
             search: (action, searchWord, callbackSetList) => {
-                onSearch(action, searchWord, callbackSetList);
+                onSearch(action.payload, searchWord, callbackSetList);
             },
             select: (action, itemData) => {
                 onSelect(action, itemData);
@@ -134,7 +184,116 @@ window.exports = {
             placeholder: promptText,
         }
     },
+    "switch_any_text": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                mathSearchWord = action.payload;
+                switchOnEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                if(mathIsInSearch) {
+                    onSearch(model, searchWord, callbackSetList);
+                } else {
+                    switchOnEnter(action, callbackSetList);
+                }
+            },
+            select: (action, itemData, callbackSetList) => {
+                console.log("select");
+                if(mathIsInSearch) {
+                    utools.setSubInput(({ text }) => {
+                        if(mathIsInSearch) {
+                            onSearch(model, searchWord, callbackSetList);
+                        } else {
+                            switchOnEnter(action, callbackSetList);
+                        }
+                    }, '选择要转换的格式', false);
+                    onSelect(action, itemData);
+                    mathIsInSearch = false;
+                    isMathFirst = false;
+                } else {
+                    callbackSetList([]);
+                    utools.setSubInput(({ text }) => {
+                            onSearch(model, text, callbackSetList);
+                    }, itemData.title, false);
+                    model = titleSwitchGetModel(itemData.title);
+                    onSearch(model, mathSearchWord, callbackSetList);
+                    mathIsInSearch = true;
+                }
+            },
+            placeholder: "选择要转换的格式",
+        }
+    },
+    "whether_to_shut_down_automatical": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+                if (whetherToShutDownAutomatical === null) {
+                    utools.showNotification("变量快速翻译命名插件将会自动关闭")
+                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                } else {
+                    if (whetherToShutDownAutomatical === "1") {
+                        utools.showNotification("变量快速翻译命名插件将不会自动关闭")
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
+                    } else {
+                        utools.showNotification("变量快速翻译命名插件将会自动关闭")
+
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                    }
+                }
+                utools.hideMainWindow();
+                utools.outPlugin()
+            }
+        }
+    },
+    "any_text_match": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+                function any_text_matchOpen() {
+                    utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于开启状态,可配合超级面板使用哦")
+                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                    addany_text_match();
+                }
+
+                if (whetherToShutDownAutomatical === null) {
+                    any_text_matchOpen();
+                } else {
+                    if (whetherToShutDownAutomatical === "1") {
+                        utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于关闭状态")
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
+                        removeany_text_match();
+                    } else {
+                        any_text_matchOpen();
+                    }
+                }
+                utools.hideMainWindow();
+                utools.outPlugin()
+            }
+        }
+    },
 };
+
+function addany_text_match(){
+    utools.setFeature({
+        "code": "switch_any_text",
+        "explain": "使用变量快速翻译命名插件",
+        "cmds": [
+            {
+                "type": "over",
+                "label": "选择格式后进行命名"
+            }
+        ]
+    })
+}
+
+function removeany_text_match(){
+
+}
 
 
 var urlEncode = function(param, key, encode) {
@@ -301,34 +460,37 @@ var setPlaceholder = function(payload)
 
 function enter(text) {
     utools.copyText(text);
-    if(userAction.auto_shutdown === 1) {
+    whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+    isClose = true;
+    if(whetherToShutDownAutomatical === null) {
+        isClose = true;
+        utools.showNotification("变量快速翻译命名插件将会自动关闭, 如需设置请查看插件详情")
+        utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+    } else {
+        if(whetherToShutDownAutomatical === "1") {
+            isClose = true;
+        } else {
+            isClose = false;
+        }
+    }
+    if(isClose) {
         utools.hideMainWindow();
+        utools.setSubInputValue('');
+        utools.outPlugin();
+        paste();
     }
-    utools.setSubInputValue('');
-    utools.outPlugin();
-    if(userAction.auto_keyboard_shortcuts === 1) {
-        if (utools.isWindows()) {
-            utools.simulateKeyboardTap('v', 'ctrl')
-            // utools.robot.keyToggle("v", "down", "control");
-            // utools.robot.keyToggle("v", "up", "control");
-        }
-        if (utools.isMacOs()) {
-            // utools.robot.keyToggle("v", "down", "command");
-            // utools.robot.keyToggle("v", "up", "command");
-            utools.simulateKeyboardTap('v', 'command')
-        }
-        //other
-        if(utools.isLinux()) {
-            // utools.robot.keyToggle("v", "down", "control");
-            // utools.robot.keyToggle("v", "up", "control");
-            utools.simulateKeyboardTap('v', 'ctrl')
-        }
+}
 
-
+function paste() {
+    if (utools.isWindows()) {
+        utools.simulateKeyboardTap('v', 'ctrl')
     }
-
-    //二次打开剪切板有影响
-    // clipboard.writeText('', 'selection');
+    if (utools.isMacOs()) {
+        utools.simulateKeyboardTap('v', 'command')
+    }
+    if(utools.isLinux()) {
+        utools.simulateKeyboardTap('v', 'ctrl')
+    }
 }
 
 /**
