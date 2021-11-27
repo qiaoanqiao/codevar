@@ -294,7 +294,7 @@ function addany_text_match(){
 }
 
 function removeany_text_match(){
-
+    utools.removeFeature('switch_any_text')
 }
 
 
