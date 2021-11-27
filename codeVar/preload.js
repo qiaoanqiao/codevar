@@ -203,11 +203,13 @@ window.exports = {
                 if(mathIsInSearch) {
                     utools.setSubInput(({ text }) => {
                         if(mathIsInSearch) {
-                            onSearch(model, searchWord, callbackSetList);
+                            mathSearchWord = text;
+                            onSearch(model, text, callbackSetList);
                         } else {
+                            mathSearchWord = text;
                             switchOnEnter(action, callbackSetList);
                         }
-                    }, '选择要转换的格式', false);
+                    }, '此输入框可重新输入内容,选择要转换的格式', false);
                     onSelect(action, itemData);
                     mathIsInSearch = false;
                     isMathFirst = false;
@@ -215,7 +217,7 @@ window.exports = {
                     callbackSetList([]);
                     utools.setSubInput(({ text }) => {
                             onSearch(model, text, callbackSetList);
-                    }, itemData.title, false);
+                    }, itemData.title + ",可重新输入搜索(格式选择后显示固定格式)", false);
                     model = titleSwitchGetModel(itemData.title);
                     onSearch(model, mathSearchWord, callbackSetList);
                     mathIsInSearch = true;
