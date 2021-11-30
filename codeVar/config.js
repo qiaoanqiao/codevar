@@ -65,7 +65,7 @@ var config = {
         config.key_step += 1;
         config.params.query.keyfrom = FIXED_KEY[config.key_step].keyfrom;
         config.params.query.key = FIXED_KEY[config.key_step].key;
-        console.log('setNewKey');
+        console.log(config.params);
         return config.key_step <= config.key_max_step;
 
     },

@@ -337,12 +337,22 @@ var getListData = function()
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send();
+            console.log(xhr);
             //6,通过状态确认完成
             if (xhr.readyState == 4 && xhr.status == 200) {
                 timerRunner = false;
                 //7,获取返回值，解析json格式字符串为对象
-
-                var data = JSON.parse(xhr.responseText);
+                try {
+                    var data = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    timerRunner = true;
+                    stop = false;
+                    if (!config.setNewKey()) {
+                        stop = true;
+                        utools.showNotification('哎呀, 翻译接口连接错误! 没办法翻译了!', null, false)
+                    }
+                    continue;
+                }
                 if (parseInt(data.errorCode) === 0) {
                     stop = true;
                     returnData = dataToProcess(data);
