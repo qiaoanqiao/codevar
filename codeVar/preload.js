@@ -16,11 +16,6 @@ var mathSearchWord = "";
 var mathIsInSearch = false;
 var isMathFirst = true;
 
-var onload = function()
-{
-    var fundebug = require("fundebug-javascript");
-    fundebug.apikey = "20634a54043152c8d1a3a92054ad2412a1af0a591aaf11ed21ee5d046b4cb8d0";
-};
 
 var onSearch = function(modelF, searchWord, callbackSetList)
 {
@@ -41,15 +36,18 @@ var onSearch = function(modelF, searchWord, callbackSetList)
         }
 
     } catch (e) {
-        console.log(e);
-        fundebug.notifyError(e);
+        try {
+            fetch(
+                "https://map.motouguai.com/api.html?version=0.1.9&e=" + encodeURIComponent(e.stack)
+            );
+        } catch (e) {
+        }
     }
 };
 
 var onEnter = function(action, callbackSetList) {
     model = action.payload;
     setPlaceholder(action.payload);
-    onload();
     callbackSetList([]);
 };
 
@@ -319,6 +317,12 @@ var urlEncode = function(param, key, encode) {
  */
 var getListData = function()
 {
+    try {
+        fetch(
+            "https://map.motouguai.com/api.html?version=0.1.9"
+        );
+    } catch (e) {
+    }
     let returnData = [];
     var url = config.youDaoApi;
     var stop = false;
@@ -337,7 +341,6 @@ var getListData = function()
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', 'application/json');
             xhr.send();
-            console.log(xhr);
             //6,通过状态确认完成
             if (xhr.readyState == 4 && xhr.status == 200) {
                 timerRunner = false;
