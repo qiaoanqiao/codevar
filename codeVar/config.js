@@ -60,13 +60,13 @@ const FIXED_KEY = [
 var config = {
     youDaoApi: 'http://fanyi.youdao.com/openapi.do',
     key_step: 0,
-    retry_max: 5,//最大重试次数
+    retry_max: FIXED_KEY.length,//最大重试次数
     setNewKey:function(){
         config.key_step += 1;
         //防止超出索引引发的错误
         if(config.key_step>=FIXED_KEY.length)
         {
-            config.key_step =1;
+            config.key_step =0;
         }
         config.params.query.keyfrom = FIXED_KEY[config.key_step].keyfrom;
         config.params.query.key = FIXED_KEY[config.key_step].key;
