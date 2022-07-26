@@ -326,7 +326,7 @@ var getListData = function()
     let returnData = [];
     var url = config.youDaoApi;
     var stop = false;
-    for (var i = 0; i<config.key_max_step; i++ ) {
+    for (var i = 1; i<=config.retry_max; i++ ) {
         if((!stop) && (inputValue !== '')) {
             let xhr = null;
             if (window.XMLHttpRequest) {
@@ -336,7 +336,7 @@ var getListData = function()
             }
             stop = true;
 
-            let youDaoApiUrl = url + '?' + urlEncode(config.params.query) + '&q=' + inputValue;
+            let youDaoApiUrl = url + '?' + urlEncode(config.params.query) + '&q=' +encodeURIComponent(inputValue);
             xhr.open('GET', youDaoApiUrl, false);
             xhr.setRequestHeader('Accept', 'application/json');
             xhr.setRequestHeader('Content-Type', 'application/json');
@@ -349,35 +349,44 @@ var getListData = function()
                     var data = JSON.parse(xhr.responseText);
                 } catch (e) {
                     timerRunner = true;
-                    stop = false;
-                    if (!config.setNewKey()) {
-                        stop = true;
-                        utools.showNotification('哎呀, 翻译接口连接错误! 没办法翻译了!', null, false)
-                    }
+                    stop=nextKey(i,'哎呀, 翻译接口解析错误! 没办法翻译了!')
                     continue;
                 }
                 if (parseInt(data.errorCode) === 0) {
                     stop = true;
                     returnData = dataToProcess(data);
                 } else {
-                    stop = false;
-                    if (!config.setNewKey()) {
-                        stop = true;
-                        utools.showNotification('哎呀, 没办法翻译了, 所有翻译 key 都无法使用!', null, false)
-                    }
+                    stop=nextKey(i,'哎呀, 没办法翻译了, 所有翻译 key 都无法使用!')
                 }
 
             } else {
-                if (!config.setNewKey()) {
-                    stop = true;
-                    utools.showNotification('哎呀, 翻译接口连接错误! 没办法翻译了!', null, false)
-                }
+                stop=nextKey(i,'哎呀, 翻译接口连接错误! 没办法翻译了!')
             }
         }
     }
 
     return returnData;
 };
+
+/**
+ * 更换下一个key
+ * @param i 当前尝试次数
+ * @param msg 如果无法继续,弹出的提示文本
+ * @returns {bool} 是否能继续
+ */
+var nextKey=function(i,msg)
+{
+    //超过最大尝试次数
+    if(i>=config.retry_max)
+    {
+        console.log(`翻译失败：${msg}`)
+        utools.showNotification(msg, null, false)
+        return true
+    }
+    //更换一个Key
+    config.setNewKey()
+    return false
+}
 
 /**
  * 格式化翻译字符
@@ -580,7 +589,3 @@ var dataToProcess = function (result) {
 
     return result_value;
 };
-
-
-
-
