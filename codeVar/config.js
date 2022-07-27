@@ -58,7 +58,7 @@ const FIXED_KEY = [
 
 
 var config = {
-    youDaoApi: 'http://fanyi.youdao.com/openapi.do',
+    youDaoApi: 'http://youdaofanyixian.motouguai.com/openapi.do',
     key_step: 0,
     retry_max: FIXED_KEY.length,//最大重试次数
     setNewKey:function(){
