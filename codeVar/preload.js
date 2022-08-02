@@ -45,33 +45,17 @@ var isMathFirst = true;
  * 需要抢夺的定时器
  * @type {boolean}
  */
-var timerRunner = false;
-if (typeof(window.jquery) == "undefined")
-{
-    user();
-}
-function user() {
-    // 获取用户服务端临时令牌，2 小时内有效
+try {
     utools.fetchUserServerTemporaryToken().then((res) => {
+        console.log(res.token);
         window.access_token = res.token;
-        window.jquery.get(window.codevarHost + "/utools/info?accessToken=" + window.access_token,function(data,status){
-            if(data.code === 0) {
-                if(data.data.noticeMessage !== "" && data.data.noticeMessage != null) {
-                    utools.showNotification(data.data.noticeMessage)
-                }
-                if(data.data.isRenew != null && data.data.isRenew === true ) {
-                    utools.showNotification("续费啦!")
-
-                    utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                        utools.showNotification("续费成功!")
-                    })
-                }
-            }
-            console.log(data, status);
-        });
     });
 
+}catch(e){
+    console.log(e);
 }
+
+var timerRunner = false;
 
 /**
  * 插件进入对应模式响应

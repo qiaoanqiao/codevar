@@ -1,4 +1,10 @@
 
+function urlencode (str) {
+    str = (str + '').toString();
+
+    return encodeURIComponent(str).replace(/!/g, '%21').replace(/'/g, '%27').replace(/\(/g, '%28').
+    replace(/\)/g, '%29').replace(/\*/g, '%2A').replace(/%20/g, '+');
+}
 var ApiAdaptor = {
     /**
      * 获取有道接口处理后的列表数据.
@@ -24,7 +30,7 @@ var ApiAdaptor = {
 
         }
         var url = window.codevarHost + "/main/translation";
-        let urlQ = url + '?input=' + inputValue + "&model=" + model + "&accessToken=" + window.access_token;
+        let urlQ = url + '?input=' + urlencode(inputValue) + "&model=" + model + "&accessToken=" + window.access_token;
         var returnData = {
             resultData:null,
             errorMessage:null,
@@ -38,10 +44,16 @@ var ApiAdaptor = {
             data: {
             },
             success: function (data) {
-                if(data.code !== 0) {
-                    returnData.errorMessage = "请求接口网络错误";
-                } else {
+                if(data.code === 0) {
                     returnData.resultData = data.data;
+                } else if(data.code === 110) {
+                    returnData.errorMessage = data.msg;
+                } else if(data.code === 111) {
+                    utools.showNotification(data.msg);
+                    utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                        utools.showNotification("续费成功,请稍等片刻继续使用!")
+                    })
+                    returnData.resultData = [];
                 }
 
             },
