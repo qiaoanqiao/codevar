@@ -22,7 +22,7 @@ var inputValue = {inpuValue:""};
  * 输入延迟搜素时间(毫秒)
  * @type {number}
  */
-var inputLag = 350;
+var inputLag = 450;
 
 /**
  * 任意关键词模式,搜索文字
@@ -257,6 +257,39 @@ window.exports = {
                             utools.hideMainWindow();
                             utools.outPlugin()
                         }
+                    })
+                });
+
+
+
+            }
+        }
+    },
+    "user_info_renew": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                // 获取用户服务端临时令牌，2 小时内有效
+                utools.fetchUserServerTemporaryToken().then((res) => {
+                    window.access_token = res.token;
+                    let fetchRes = fetch(
+                        window.codevarHost + "/utools/info?accessToken=" + window.access_token + "&renew=1");
+
+                    // fetchRes is the promise to resolve
+                    // it by using.then() method
+                    fetchRes.then(res =>
+                        res.json()).then(data => {
+                        console.log(data)
+                        if(data.code === 110) {
+                            utools.showNotification(data.msg);
+                        } else if(data.code === 111) {
+                            utools.showNotification(data.msg);
+                            utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                                utools.showNotification("续费成功,请稍等片刻继续使用!")
+                            })
+                        }
+
                     })
                 });
 
