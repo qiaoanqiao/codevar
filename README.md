@@ -48,11 +48,15 @@
 觉得这款插件不错的大老爷,支持扫码打赏啦. 你的打赏是我坚持的动力
 邮箱:imhereyougone@163.com
 
-#### 支付宝
-![](http://ww1.sinaimg.cn/large/007xSf3gly1goklrcbcn3j30el0etjs5.jpg)
-
-#### 微信信
-![](http://ww1.sinaimg.cn/large/007xSf3gly1goklrjr11xj30fx0g940e.jpg)
-
-#### 支付宝红包
-![](http://ww1.sinaimg.cn/large/007xSf3gly1gokls8is34j314z1pxgxw.jpg)
+<table>
+    <tr>
+        <td>支付宝</td>
+        <td>微信</td>
+        <td>支付宝红包</td>
+    </tr>
+    <tr>
+        <td><img src="http://ww1.sinaimg.cn/large/007xSf3gly1goklrcbcn3j30el0etjs5.jpg"/></td>
+        <td><img src="http://ww1.sinaimg.cn/large/007xSf3gly1goklrjr11xj30fx0g940e.jpg"/></td>
+        <td><img style="width: 30%;" src="http://ww1.sinaimg.cn/large/007xSf3gly1gokls8is34j314z1pxgxw.jpg"/></td>
+    </tr>
+</table>
