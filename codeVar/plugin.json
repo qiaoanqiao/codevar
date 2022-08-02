@@ -1,6 +1,6 @@
 {
     "pluginName": "变量快速翻译命名插件",
-    "version": "0.2.0",
+    "version": "1.0.0",
     "description": "使用翻译进行变量格式化命名.",
     "author": "乔安",
     "homepage": "https://www.motouguai.com",
@@ -54,6 +54,13 @@
             "explain": "切换变量快速翻译命名插件是否任意文本匹配插件",
             "cmds": [
                 "变量快速翻译命名插件是否任意文本匹配插件(可配合超级面板)"
+            ]
+        },
+        {
+            "code": "user_info",
+            "explain": "获取用户信息",
+            "cmds": [
+                "变量快速翻译命名插件获取用户信息"
             ]
         }
     ]

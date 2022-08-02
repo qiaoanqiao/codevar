@@ -1,36 +1,324 @@
-var timerRunner = false; //需要抢夺的定时器
-const {clipboard} = require('electron');
-const convert = require('./function/convert.js');
-const config = require('./config.js');
-var switchInText = "";
-var userAction = {
-    auto_shutdown:1,
-    auto_keyboard_shortcuts:1,
-};
+window.codevarHost = "https://codevar-api.motouguai.com";
+const ApiAdaptor = require('./Adaptor/ApiAdaptor.js');
+const access_token = "";
+
+/**
+ * 进入模式, xt,dt等等
+ * @type {string}
+ */
 var model = '';
+/**
+ * 搜索框提示文本
+ * @type {string}
+ */
 var promptText = '请输入要转化的文字';
-var inputValue = '';
-//输入延迟
+/**
+ * 搜索字符串
+ * @type {{inpuValue: string}}
+ */
+var inputValue = {inpuValue:""};
+
+/**
+ * 输入延迟搜素时间(毫秒)
+ * @type {number}
+ */
 var inputLag = 350;
+
+/**
+ * 任意关键词模式,搜索文字
+ * @type {string}
+ */
 var mathSearchWord = "";
+/**
+ * 任意关键词模式, 是否重复搜索
+ * @type {boolean}
+ */
 var mathIsInSearch = false;
+
+/**
+ * 任意关键词模式, 是否第一次搜索
+ * @type {boolean}
+ */
 var isMathFirst = true;
 
+/**
+ * 需要抢夺的定时器
+ * @type {boolean}
+ */
+var timerRunner = false;
+if (typeof(window.jquery) == "undefined")
+{
+    user();
+}
+function user() {
+    // 获取用户服务端临时令牌，2 小时内有效
+    utools.fetchUserServerTemporaryToken().then((res) => {
+        window.access_token = res.token;
+        window.jquery.get(window.codevarHost + "/utools/info?accessToken=" + window.access_token,function(data,status){
+            if(data.code === 0) {
+                if(data.data.noticeMessage !== "" && data.data.noticeMessage != null) {
+                    utools.showNotification(data.data.noticeMessage)
+                }
+                if(data.data.isRenew != null && data.data.isRenew === true ) {
+                    utools.showNotification("续费啦!")
 
+                    utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                        utools.showNotification("续费成功!")
+                    })
+                }
+            }
+            console.log(data, status);
+        });
+    });
+
+}
+
+/**
+ * 插件进入对应模式响应
+ */
+window.exports = {
+    //转换内容为大驼峰命名格式
+    "big_hump": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action.payload, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    //转换内容为小驼峰命名格式
+    "small_hump": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action.payload, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    //转换内容为下划线命名格式
+    "underline": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action.payload, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    //转换内容为横线命名格式
+    "horizontal_line": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action.payload, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    //转换内容为常量命名格式
+    "constant": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                onEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                onSearch(action.payload, searchWord, callbackSetList);
+            },
+            select: (action, itemData) => {
+                onSelect(action, itemData);
+            },
+            placeholder: promptText,
+        }
+    },
+    //任意关键字-使用变量快速翻译命名插件
+    "switch_any_text": {
+        mode: "list",
+        args: {
+            enter: (action, callbackSetList) => {
+                mathSearchWord = action.payload;
+                switchOnEnter(action, callbackSetList);
+            },
+            search: (action, searchWord, callbackSetList) => {
+                if(mathIsInSearch) {
+                    onSearch(model, searchWord, callbackSetList);
+                } else {
+                    switchOnEnter(action, callbackSetList);
+                }
+            },
+            select: (action, itemData, callbackSetList) => {
+                if(mathIsInSearch) {
+                    utools.setSubInput(({ text }) => {
+                        if(mathIsInSearch) {
+                            mathSearchWord = text;
+                            onSearch(model, text, callbackSetList);
+                        } else {
+                            mathSearchWord = text;
+                            switchOnEnter(action, callbackSetList);
+                        }
+                    }, '此输入框可重新输入内容,选择要转换的格式', false);
+                    onSelect(action, itemData);
+                    mathIsInSearch = false;
+                    isMathFirst = false;
+                } else {
+                    callbackSetList([]);
+                    utools.setSubInput(({ text }) => {
+                        onSearch(model, text, callbackSetList);
+                    }, itemData.title + ",可重新输入搜索(格式选择后显示固定格式)", false);
+                    model = anyTextTitleSwitchGetModel(itemData.title);
+                    onSearch(model, mathSearchWord, callbackSetList);
+                    mathIsInSearch = true;
+                }
+            },
+            placeholder: "选择要转换的格式",
+        }
+    },
+    //切换变量快速翻译命名插件是否自动关闭设置
+    "whether_to_shut_down_automatical": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+                if (whetherToShutDownAutomatical === null) {
+                    utools.showNotification("变量快速翻译命名插件将会自动关闭")
+                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                } else {
+                    if (whetherToShutDownAutomatical === "1") {
+                        utools.showNotification("变量快速翻译命名插件将不会自动关闭")
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
+                    } else {
+                        utools.showNotification("变量快速翻译命名插件将会自动关闭")
+
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                    }
+                }
+                utools.hideMainWindow();
+                utools.outPlugin()
+            }
+        }
+    },
+    //切换变量快速翻译命名插件是否任意文本匹配插件
+    "any_text_match": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+                function any_text_matchOpen() {
+                    utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于开启状态,可配合超级面板使用哦")
+                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                    addany_text_match();
+                }
+
+                if (whetherToShutDownAutomatical === null) {
+                    any_text_matchOpen();
+                } else {
+                    if (whetherToShutDownAutomatical === "1") {
+                        utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于关闭状态")
+                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
+                        removeany_text_match();
+                    } else {
+                        any_text_matchOpen();
+                    }
+                }
+                utools.hideMainWindow();
+                utools.outPlugin()
+            }
+        }
+    },
+    "user_info": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                // 获取用户服务端临时令牌，2 小时内有效
+                utools.fetchUserServerTemporaryToken().then((res) => {
+                    window.access_token = res.token;
+                    let fetchRes = fetch(
+                        window.codevarHost + "/utools/info?accessToken=" + window.access_token);
+
+                    // fetchRes is the promise to resolve
+                    // it by using.then() method
+                    fetchRes.then(res =>
+                        res.json()).then(data => {
+                        if(data.code === 0) {
+                            utools.showNotification("过期时间: " + data.data.vipDueTime)
+                            utools.hideMainWindow();
+                            utools.outPlugin()
+                        }
+                    })
+                });
+
+
+
+            }
+        }
+    },
+};
+
+var onload = function()
+{
+    window.jquery = require("jquery");
+
+};
+
+/**
+ * 搜索入口
+ * @param modelF 搜索模式
+ * @param searchWord 搜索字符
+ * @param callbackSetList 返回列表搜索结果函数
+ */
 var onSearch = function(modelF, searchWord, callbackSetList)
 {
     try {
         model = modelF;
-        inputValue = searchWord;
-        let selectData = [];
-        if(inputValue !== '') {
+        //使用全局变量, 当值更改时定时器内及时获取最新值搜索
+        inputValue.inpuValue = searchWord;
+        if(inputValue.inpuValue !== '') {
+            //如果定时器没运行, 则设置一个定时器, 指定延迟后执行, 执行完毕后清除定时器拦截
             if (timerRunner === false) {
-                callbackSetList([]);
                 timerRunner = true;
+                callbackSetList([]);
                 setTimeout(function () {
+                    // let transformData = youdaoGet();
+                    let transformData = ApiAdaptor.getListData(searchWord, model);
+                    console.log("transformData", transformData)
+                    if(transformData.errorMessage === null) {
+                        if (transformData.resultData === null) {
+                            utools.showNotification("接口没有返回信息嗷", null, false)
+                        }
+                    } else {
+                        utools.showNotification(transformData.errorMessage, null, false)
+                    }
                     timerRunner = false;
-                    selectData = getListData(modelF);
-                    callbackSetList(selectData)
+                    callbackSetList(transformData.resultData)
                 }, inputLag);
             }
         }
@@ -45,20 +333,37 @@ var onSearch = function(modelF, searchWord, callbackSetList)
     }
 };
 
+
+/**
+ * 首次展示入口
+ * @param action
+ * @param callbackSetList
+ */
 var onEnter = function(action, callbackSetList) {
     model = action.payload;
     setPlaceholder(action.payload);
+    onload();
     callbackSetList([]);
 };
 
+/**
+ * 选中事件
+ * @param action
+ * @param itemData 当前选中数据
+ */
 var onSelect = function(action, itemData) {
     try {
-        enter(itemData.arg);
+        select(itemData.arg);
     } catch (e) {
-        fundebug.notifyError(e);
+        console.log(e);
     }
 };
 
+/**
+ * 展示鼠标触发的提示信息
+ * @param action
+ * @param callbackSetList
+ */
 function switchOnEnter(action, callbackSetList) {
     let result_value = [];
     result_value.push({
@@ -89,7 +394,12 @@ function switchOnEnter(action, callbackSetList) {
     callbackSetList(result_value);
 }
 
-function titleSwitchGetModel(title) {
+/**
+ * 匹配对应的翻译展示模式
+ * @param title
+ * @returns {string}
+ */
+function anyTextTitleSwitchGetModel(title) {
     switch (title) {
         case "小驼峰命名格式":
             return "xt";
@@ -106,177 +416,6 @@ function titleSwitchGetModel(title) {
     }
 }
 
-window.exports = {
-    "big_hump": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                onEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                onSearch(action.payload, searchWord, callbackSetList);
-            },
-            select: (action, itemData) => {
-                onSelect(action, itemData);
-            },
-            placeholder: promptText,
-        }
-    },
-    "small_hump": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                onEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                onSearch(action.payload, searchWord, callbackSetList);
-            },
-            select: (action, itemData) => {
-                onSelect(action, itemData);
-            },
-            placeholder: promptText,
-        }
-    },
-    "underline": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                onEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                onSearch(action.payload, searchWord, callbackSetList);
-            },
-            select: (action, itemData) => {
-                onSelect(action, itemData);
-            },
-            placeholder: promptText,
-        }
-    },
-    "horizontal_line": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                onEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                onSearch(action.payload, searchWord, callbackSetList);
-            },
-            select: (action, itemData) => {
-                onSelect(action, itemData);
-            },
-            placeholder: promptText,
-        }
-    },
-    "constant": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                onEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                onSearch(action.payload, searchWord, callbackSetList);
-            },
-            select: (action, itemData) => {
-                onSelect(action, itemData);
-            },
-            placeholder: promptText,
-        }
-    },
-    "switch_any_text": {
-        mode: "list",
-        args: {
-            enter: (action, callbackSetList) => {
-                mathSearchWord = action.payload;
-                switchOnEnter(action, callbackSetList);
-            },
-            search: (action, searchWord, callbackSetList) => {
-                if(mathIsInSearch) {
-                    onSearch(model, searchWord, callbackSetList);
-                } else {
-                    switchOnEnter(action, callbackSetList);
-                }
-            },
-            select: (action, itemData, callbackSetList) => {
-                console.log("select");
-                if(mathIsInSearch) {
-                    utools.setSubInput(({ text }) => {
-                        if(mathIsInSearch) {
-                            mathSearchWord = text;
-                            onSearch(model, text, callbackSetList);
-                        } else {
-                            mathSearchWord = text;
-                            switchOnEnter(action, callbackSetList);
-                        }
-                    }, '此输入框可重新输入内容,选择要转换的格式', false);
-                    onSelect(action, itemData);
-                    mathIsInSearch = false;
-                    isMathFirst = false;
-                } else {
-                    callbackSetList([]);
-                    utools.setSubInput(({ text }) => {
-                            onSearch(model, text, callbackSetList);
-                    }, itemData.title + ",可重新输入搜索(格式选择后显示固定格式)", false);
-                    model = titleSwitchGetModel(itemData.title);
-                    onSearch(model, mathSearchWord, callbackSetList);
-                    mathIsInSearch = true;
-                }
-            },
-            placeholder: "选择要转换的格式",
-        }
-    },
-    "whether_to_shut_down_automatical": {
-        mode: "none",
-        args: {
-            // 进入插件时调用
-            enter: (action) => {
-                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
-                if (whetherToShutDownAutomatical === null) {
-                    utools.showNotification("变量快速翻译命名插件将会自动关闭")
-                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
-                } else {
-                    if (whetherToShutDownAutomatical === "1") {
-                        utools.showNotification("变量快速翻译命名插件将不会自动关闭")
-                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
-                    } else {
-                        utools.showNotification("变量快速翻译命名插件将会自动关闭")
-
-                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
-                    }
-                }
-                utools.hideMainWindow();
-                utools.outPlugin()
-            }
-        }
-    },
-    "any_text_match": {
-        mode: "none",
-        args: {
-            // 进入插件时调用
-            enter: (action) => {
-                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
-                function any_text_matchOpen() {
-                    utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于开启状态,可配合超级面板使用哦")
-                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
-                    addany_text_match();
-                }
-
-                if (whetherToShutDownAutomatical === null) {
-                    any_text_matchOpen();
-                } else {
-                    if (whetherToShutDownAutomatical === "1") {
-                        utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于关闭状态")
-                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
-                        removeany_text_match();
-                    } else {
-                        any_text_matchOpen();
-                    }
-                }
-                utools.hideMainWindow();
-                utools.outPlugin()
-            }
-        }
-    },
-};
 
 function addany_text_match(){
     utools.setFeature({
@@ -294,150 +433,6 @@ function addany_text_match(){
 function removeany_text_match(){
     utools.removeFeature('switch_any_text')
 }
-
-
-var urlEncode = function(param, key, encode) {
-    if (param==null) return '';
-    var paramStr = '';
-    var t = typeof (param);
-    if (t == 'string' || t == 'number' || t == 'boolean') {
-        paramStr += '&' + key + '='  + ((encode==null||encode) ? encodeURIComponent(param) : param);
-    } else {
-        for (var i in param) {
-            var k = key == null ? i : key + (param instanceof Array ? '[' + i + ']' : '.' + i)
-            paramStr += urlEncode(param[i], k, encode)
-        }
-    }
-    return paramStr;
-};
-
-/**
- * 获取处理后的列表数据.
- * @returns {Array}
- */
-var getListData = function()
-{
-    try {
-        fetch(
-            "https://map.motouguai.com/api.html?version=0.1.9"
-        );
-    } catch (e) {
-    }
-    let returnData = [];
-    var url = config.youDaoApi;
-    var stop = false;
-    for (var i = 1; i<=config.retry_max; i++ ) {
-        if((!stop) && (inputValue !== '')) {
-            let xhr = null;
-            if (window.XMLHttpRequest) {
-                xhr = new XMLHttpRequest();
-            } else {
-                xhr = new ActiveXObject('MicroSoft.XMLHTTP');
-            }
-            stop = true;
-
-            let youDaoApiUrl = url + '?' + urlEncode(config.params.query) + '&q=' +encodeURIComponent(inputValue);
-            xhr.open('GET', youDaoApiUrl, false);
-            xhr.setRequestHeader('Accept', 'application/json');
-            xhr.setRequestHeader('Content-Type', 'application/json');
-            xhr.send();
-            //6,通过状态确认完成
-            if (xhr.readyState == 4 && xhr.status == 200) {
-                timerRunner = false;
-                //7,获取返回值，解析json格式字符串为对象
-                try {
-                    var data = JSON.parse(xhr.responseText);
-                } catch (e) {
-                    timerRunner = true;
-                    stop=nextKey(i,'哎呀, 翻译接口解析错误! 没办法翻译了!')
-                    continue;
-                }
-                if (parseInt(data.errorCode) === 0) {
-                    stop = true;
-                    returnData = dataToProcess(data);
-                } else {
-                    stop=nextKey(i,'哎呀, 没办法翻译了, 所有翻译 key 都无法使用!')
-                }
-
-            } else {
-                stop=nextKey(i,'哎呀, 翻译接口连接错误! 没办法翻译了!')
-            }
-        }
-    }
-
-    return returnData;
-};
-
-/**
- * 更换下一个key
- * @param i 当前尝试次数
- * @param msg 如果无法继续,弹出的提示文本
- * @returns {bool} 是否能继续
- */
-var nextKey=function(i,msg)
-{
-    //超过最大尝试次数
-    if(i>=config.retry_max)
-    {
-        console.log(`翻译失败：${msg}`)
-        utools.showNotification(msg, null, false)
-        return true
-    }
-    //更换一个Key
-    config.setNewKey()
-    return false
-}
-
-/**
- * 格式化翻译字符
- * @param str
- * @returns {*}
- */
-var style = function (str) {
-    switch (model) {
-        case 'xt': {
-            str = convert.xtFilter(str);
-            break;
-        }
-        case 'dt': {
-            str = convert.dtFilter(str);
-            break;
-        }
-        case 'xh': {
-            str = convert.xhFilter(str);
-            break;
-        }
-        case 'hx': {
-            str = convert.hxFilter(str);
-            break;
-        }
-        case 'cl': {
-            str = convert.clFilter(str);
-            break;
-        }
-        case '小驼峰': {
-            str = convert.xtFilter(str);
-            break;
-        }
-        case '大驼峰': {
-            str = convert.dtFilter(str);
-            break;
-        }
-        case '下划线': {
-            str = convert.xhFilter(str);
-            break;
-        }
-        case '横线': {
-            str = convert.hxFilter(str);
-            break;
-        }
-        case '常量': {
-            str = convert.clFilter(str);
-            break;
-        }
-    }
-    return str;
-};
 
 /**
  * 设置子搜索placeholder
@@ -482,7 +477,12 @@ var setPlaceholder = function(payload)
     }
 };
 
-function enter(text) {
+/**
+ * 选中后处理
+ * @param text 选中的文本
+ */
+function select(text) {
+    console.log(text);
     utools.copyText(text);
     whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
     isClose = true;
@@ -505,6 +505,9 @@ function enter(text) {
     }
 }
 
+/**
+ * 粘贴处理
+ */
 function paste() {
     if (utools.isWindows()) {
         utools.simulateKeyboardTap('v', 'ctrl')
@@ -537,55 +540,4 @@ var urlEncode = function (param, key, encode) {
         }
     }
     return paramStr;
-};
-
-/**
- * 接口返回数据过滤
- * @param result
- * @returns {Array}
- */
-var dataToProcess = function (result) {
-    //结果
-    let result_value = [];
-    // 过滤中文
-    let reg = /^[a-zA-Z ]/;
-    // 标准翻译结果 : translation
-    let result_translation = result.translation;
-    if (result_translation) {
-        for (let i = 0, len = result_translation.length; i < len; i++) {
-            if (reg.test(result_translation[i])) {
-                result_value.push({
-                    title: style(result_translation[i]),
-                    description: `标准翻译 => ${result_translation[i]}`,
-                    arg: style(result_translation[i]),
-                    icon:'',
-                });
-            }
-        }
-    } else {
-        return [];
-    }
-    // 网络翻译 : web
-    if (result.web) {
-        let result_web = result.web;
-        if (result_web) {
-            for (let i = 0, len = result_web.length; i < len; i++) {
-                for (let j = 0, ilen = result_web[i].value.length; j < ilen; j++) {
-                    if (reg.test(result_web[i].value[j])) {
-                        result_value.push({
-                            title: style(result_web[i].value[j]),
-                            description: `网络翻译 => ${result_web[i].value[j]}`,
-                            arg: style(result_web[i].value[j]),
-                            icon:'',
-                        });
-                    }
-                }
-            }
-        } else {
-            result_value = [];
-        }
-
-    }
-
-    return result_value;
 };
