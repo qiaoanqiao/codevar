@@ -41,19 +41,6 @@ var mathIsInSearch = false;
  */
 var isMathFirst = true;
 
-/**
- * 需要抢夺的定时器
- * @type {boolean}
- */
-try {
-    utools.fetchUserServerTemporaryToken().then((res) => {
-        console.log(res.token);
-        window.access_token = res.token;
-    });
-
-}catch(e){
-    console.log(e);
-}
 
 var timerRunner = false;
 
@@ -242,25 +229,20 @@ window.exports = {
         args: {
             // 进入插件时调用
             enter: (action) => {
-                // 获取用户服务端临时令牌，2 小时内有效
-                utools.fetchUserServerTemporaryToken().then((res) => {
-                    window.access_token = res.token;
-                    let fetchRes = fetch(
-                        window.codevarHost + "/utools/info?accessToken=" + window.access_token);
+                getToken();
+                let fetchRes = fetch(
+                    window.codevarHost + "/utools/info?accessToken=" + window.access_token);
 
-                    // fetchRes is the promise to resolve
-                    // it by using.then() method
-                    fetchRes.then(res =>
-                        res.json()).then(data => {
-                        if(data.code === 0) {
-                            utools.showNotification("过期时间: " + data.data.vipDueTime)
-                            utools.hideMainWindow();
-                            utools.outPlugin()
-                        }
-                    })
-                });
-
-
+                // fetchRes is the promise to resolve
+                // it by using.then() method
+                fetchRes.then(res =>
+                    res.json()).then(data => {
+                    if(data.code === 0) {
+                        utools.showNotification("过期时间: " + data.data.vipDueTime)
+                        utools.hideMainWindow();
+                        utools.outPlugin()
+                    }
+                })
 
             }
         }
@@ -270,29 +252,25 @@ window.exports = {
         args: {
             // 进入插件时调用
             enter: (action) => {
-                // 获取用户服务端临时令牌，2 小时内有效
-                utools.fetchUserServerTemporaryToken().then((res) => {
-                    window.access_token = res.token;
-                    let fetchRes = fetch(
-                        window.codevarHost + "/utools/info?accessToken=" + window.access_token + "&renew=1");
+                getToken();
+                let fetchRes = fetch(
+                    window.codevarHost + "/utools/info?accessToken=" + window.access_token + "&renew=1");
 
-                    // fetchRes is the promise to resolve
-                    // it by using.then() method
-                    fetchRes.then(res =>
-                        res.json()).then(data => {
-                        console.log(data)
-                        if(data.code === 110) {
-                            utools.showNotification(data.msg);
-                        } else if(data.code === 111) {
-                            utools.showNotification(data.msg);
-                            utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                                utools.showNotification("续费成功,请稍等片刻继续使用!")
-                            })
-                        }
+                // fetchRes is the promise to resolve
+                // it by using.then() method
+                fetchRes.then(res =>
+                    res.json()).then(data => {
+                    console.log(data)
+                    if(data.code === 110) {
+                        utools.showNotification(data.msg);
+                    } else if(data.code === 111) {
+                        utools.showNotification(data.msg);
+                        utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                            utools.showNotification("续费成功,请稍等片刻继续使用!")
+                        })
+                    }
 
-                    })
-                });
-
+                })
 
 
             }
@@ -305,7 +283,46 @@ var onload = function()
     window.jquery = require("jquery");
 
 };
+function getToken(){
+    var token = utools.db.get("token");
+    var tokenTime = utools.db.get("token_time");
+    if(token != null && tokenTime != null) {
+        if((Date.now() - tokenTime.data) < 6100000 ) {
+            window.access_token = token.data;
+            return ;
+        } else {
+            utools.fetchUserServerTemporaryToken().then((res) => {
+                window.access_token = res.token;
 
+                utools.db.put({
+                    _id: "token",
+                    data: res.token,
+                    _rev: token._rev
+                })
+                utools.db.put({
+                    _id: "token_time",
+                    data: Date.now(),
+                    _rev: tokenTime._rev
+                })
+            });
+        }
+    } else {
+        utools.fetchUserServerTemporaryToken().then((res) => {
+            window.access_token = res.token;
+
+            utools.db.put({
+                _id: "token",
+                data: res.token
+            })
+            utools.db.put({
+                _id: "token_time",
+                data: Date.now()
+            })
+        });
+    }
+
+
+}
 /**
  * 搜索入口
  * @param modelF 搜索模式
@@ -318,6 +335,7 @@ var onSearch = function(modelF, searchWord, callbackSetList)
         model = modelF;
         //使用全局变量, 当值更改时定时器内及时获取最新值搜索
         inputValue.inpuValue = searchWord;
+        getToken();
         if(inputValue.inpuValue !== '') {
             //如果定时器没运行, 则设置一个定时器, 指定延迟后执行, 执行完毕后清除定时器拦截
             if (timerRunner === false) {
