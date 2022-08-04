@@ -58,6 +58,10 @@ var ApiAdaptor = {
                         utools.showNotification("续费成功,请稍等片刻继续使用!")
                     })
                     returnData.resultData = [];
+                } else if(data.code === 401) {
+                    utools.showNotification(data.msg);
+                    returnData.errorMessage = "401";
+                    returnData.resultData = [];
                 }
 
             },
