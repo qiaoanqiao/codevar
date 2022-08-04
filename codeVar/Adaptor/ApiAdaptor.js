@@ -22,10 +22,14 @@ var ApiAdaptor = {
                 break;
             case '横线':
                 model = "hx";
-                break
+                break;
             case '下划线':
                 model = "xh";
                 break;
+            case '常量':
+                model = "cl";
+                break;
+
             default:
 
         }

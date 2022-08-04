@@ -22,7 +22,7 @@ var inputValue = {inpuValue:""};
  * 输入延迟搜素时间(毫秒)
  * @type {number}
  */
-var inputLag = 450;
+var inputLag = 250;
 
 /**
  * 任意关键词模式,搜索文字
