@@ -39,36 +39,76 @@ var ApiAdaptor = {
             resultData:null,
             errorMessage:null,
         };
-
-        window.jquery.ajax({
-            url: urlQ,
-            type: 'get',
-            async: false,
-            dataType: 'json',
-            data: {
-            },
-            success: function (data) {
-                if(data.code === 0) {
-                    returnData.resultData = data.data;
-                } else if(data.code === 110) {
-                    returnData.errorMessage = data.msg;
-                } else if(data.code === 111) {
-                    utools.showNotification(data.msg);
-                    utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                        utools.showNotification("续费成功,请稍等片刻继续使用!")
-                    })
-                    returnData.resultData = [];
-                } else if(data.code === 401) {
-                    utools.showNotification(data.msg);
-                    returnData.errorMessage = "401";
-                    returnData.resultData = [];
-                }
-
-            },
-            error(status) {
+        let xhr = null;
+        if (window.XMLHttpRequest) {
+            xhr = new XMLHttpRequest();
+        } else {
+            xhr = new ActiveXObject('MicroSoft.XMLHTTP');
+        }
+        xhr.open('GET', urlQ, false);
+        xhr.setRequestHeader('Accept', 'application/json');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.send();
+        if (xhr.readyState == 4 && xhr.status == 200) {
+            //7,获取返回值，解析json格式字符串为对象
+            try {
+                var data = JSON.parse(xhr.responseText);
+            } catch (e) {
                 returnData.errorMessage = "请求接口网络错误";
             }
-        });
+            if(data.code === 0) {
+                returnData.resultData = data.data;
+            } else if(data.code === 110) {
+                returnData.errorMessage = data.msg;
+            } else if(data.code === 111) {
+                utools.showNotification(data.msg);
+                utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                    utools.showNotification("续费成功,请稍等片刻继续使用!")
+                })
+                returnData.resultData = [];
+            } else if(data.code === 401) {
+                utools.showNotification(data.msg);
+                returnData.errorMessage = "401";
+                returnData.resultData = [];
+            }
+            // if (parseInt(data.errorCode) === 0) {
+            //
+            // } else {
+            // }
+
+        } else {
+            returnData.errorMessage = "请求接口网络错误";
+        }
+        //
+        // window.jquery.ajax({
+        //     url: urlQ,
+        //     type: 'get',
+        //     async: false,
+        //     dataType: 'json',
+        //     data: {
+        //     },
+        //     success: function (data) {
+        //         if(data.code === 0) {
+        //             returnData.resultData = data.data;
+        //         } else if(data.code === 110) {
+        //             returnData.errorMessage = data.msg;
+        //         } else if(data.code === 111) {
+        //             utools.showNotification(data.msg);
+        //             utools.openPayment({ goodsId: data.data.goodsId }, () => {
+        //                 utools.showNotification("续费成功,请稍等片刻继续使用!")
+        //             })
+        //             returnData.resultData = [];
+        //         } else if(data.code === 401) {
+        //             utools.showNotification(data.msg);
+        //             returnData.errorMessage = "401";
+        //             returnData.resultData = [];
+        //         }
+        //
+        //     },
+        //     error(status) {
+        //         returnData.errorMessage = "请求接口网络错误";
+        //     }
+        // });
 
         return returnData;
     }

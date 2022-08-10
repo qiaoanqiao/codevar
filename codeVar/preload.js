@@ -44,6 +44,20 @@ var isMathFirst = true;
 
 var timerRunner = false;
 
+getToken();
+try {
+    let fetchRes = fetch(
+        window.codevarHost + "/utools/info?accessToken=" + window.access_token);
+} catch (e) {
+}
+const sint= setInterval(()=>{
+    getToken();
+    try {
+        let fetchRes = fetch(
+            window.codevarHost + "/utools/info?accessToken=" + window.access_token);
+    } catch (e) {
+    }
+},3080000);
 /**
  * 插件进入对应模式响应
  */
@@ -280,7 +294,6 @@ window.exports = {
 
 var onload = function()
 {
-    window.jquery = require("jquery");
 
 };
 function getToken(force){
