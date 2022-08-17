@@ -6,6 +6,9 @@ function urlencode (str) {
     replace(/\)/g, '%29').replace(/\*/g, '%2A').replace(/%20/g, '+');
 }
 var ApiAdaptor = {
+    force: 0,
+    inputValue: '',
+    model:'',
     /**
      * 获取有道接口处理后的列表数据.
      * @returns {{resultData: null, errorMessage: null}}
@@ -13,6 +16,11 @@ var ApiAdaptor = {
      */
     getListData(inputValue, model)
     {
+        if(ApiAdaptor.inputValue !== inputValue) {
+            ApiAdaptor.force = 0;
+        }
+        ApiAdaptor.inputValue = inputValue;
+        ApiAdaptor.model = model;
         switch (model) {
             case '小驼峰':
                 model = "xt";
@@ -31,54 +39,56 @@ var ApiAdaptor = {
                 break;
 
             default:
-
         }
-        var url = window.codevarHost + "/main/translation";
-        let urlQ = url + '?input=' + urlencode(inputValue) + "&model=" + model + "&accessToken=" + window.access_token;
-        var returnData = {
-            resultData:null,
-            errorMessage:null,
-        };
         let xhr = null;
         if (window.XMLHttpRequest) {
             xhr = new XMLHttpRequest();
         } else {
             xhr = new ActiveXObject('MicroSoft.XMLHTTP');
         }
-        xhr.open('GET', urlQ, false);
+        var url = window.codevarHost + "/main/translation";
+        let urlQ = url + '?input=' + urlencode(inputValue) + "&model=" + model + "&accessToken=" + window.access_token;
+
+        xhr.open('GET', urlQ, true);
         xhr.setRequestHeader('Accept', 'application/json');
         xhr.setRequestHeader('Content-Type', 'application/json');
-        xhr.send();
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            //7,获取返回值，解析json格式字符串为对象
-            try {
-                var data = JSON.parse(xhr.responseText);
-            } catch (e) {
-                returnData.errorMessage = "请求接口网络错误";
-            }
-            if(data.code === 0) {
-                returnData.resultData = data.data;
-            } else if(data.code === 110) {
-                returnData.errorMessage = data.msg;
-            } else if(data.code === 111) {
-                utools.showNotification(data.msg);
-                utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                    utools.showNotification("续费成功,请稍等片刻继续使用!")
-                })
-                returnData.resultData = [];
-            } else if(data.code === 401) {
-                utools.showNotification(data.msg);
-                returnData.errorMessage = "401";
-                returnData.resultData = [];
-            }
-            // if (parseInt(data.errorCode) === 0) {
-            //
-            // } else {
-            // }
+        xhr.timeout=6000;
+        xhr.ontimeout=function(){
 
-        } else {
-            returnData.errorMessage = "请求接口网络错误";
+            if(window.confirm('连接超时是否继续请求？')){
+                ApiAdaptor.getListData(ApiAdaptor.inputValue, ApiAdaptor.model);
+            }else{
+
+            }
+
+            try {
+                fetch(
+                    "https://map.motouguai.com/api.html?version=0.1.9&timeout=" + urlencode(utools.getUser().nickname)
+                );
+            } catch (e) {
+            }
         }
+        xhr.onreadystatechange = function () {
+            window.timerRunner = false;
+            if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                ApiAdaptor.success(xhr.responseText);
+            }
+        }
+        try {
+            xhr.send();
+        } catch (e) {
+            ApiAdaptor.callbackSetList("请求接口网络不通")
+        }
+        // if (xhr.readyState == 4 && xhr.status == 200) {
+        //
+        //     // if (parseInt(data.errorCode) === 0) {
+        //     //
+        //     // } else {
+        //     // }
+        //
+        // } else {
+        //     returnData.errorMessage = "请求接口后过程有未知错误";
+        // }
         //
         // window.jquery.ajax({
         //     url: urlQ,
@@ -109,8 +119,53 @@ var ApiAdaptor = {
         //         returnData.errorMessage = "请求接口网络错误";
         //     }
         // });
+    },
+    success(text, force){
+        //7,获取返回值，解析json格式字符串为对象
+        try {
+            var data = JSON.parse(text);
+        } catch (e) {
+            ApiAdaptor.callbackSetList("接口请求网络不通畅");
+        }
+        if(data.code === 0) {
+            ApiAdaptor.force = 0;
 
-        return returnData;
+            window.callbackSetList(data.data);
+        } else if(data.code === 110) {
+            ApiAdaptor.force = 0;
+
+            ApiAdaptor.callbackSetList(data.msg);
+
+        } else if(data.code === 111) {
+            ApiAdaptor.force = 0;
+
+            utools.showNotification(data.msg);
+            ApiAdaptor.callbackSetList(data.msg);
+            utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                utools.showNotification("续费成功,请稍等片刻继续使用!")
+            })
+            ApiAdaptor.callbackSetList("如果续费支付成功,请稍等片刻继续使用!");
+        } else if(data.code === 401) {
+            if(ApiAdaptor.force > 3) {
+                    ApiAdaptor.callbackSetList("接口token刷新重试超过三次依然校验失败");
+            } else {
+                ApiAdaptor.force +=1;
+                ApiAdaptor.getListData(ApiAdaptor.inputValue, ApiAdaptor.model);
+            }
+
+        } else {
+            ApiAdaptor.callbackSetList("接口请求网络位置状态码");
+        }
+    },
+    callbackSetList(msg){
+        window.callbackSetList([
+            {
+                title: msg,
+                description: '',
+                icon:'', // 图标
+                url: ''
+            }
+        ]);
     }
 };
 

@@ -1,4 +1,5 @@
 window.codevarHost = "https://codevar-api.motouguai.com";
+// window.codevarHost = "http://127.0.0.1:8080";
 const ApiAdaptor = require('./Adaptor/ApiAdaptor.js');
 const access_token = "";
 
@@ -42,7 +43,7 @@ var mathIsInSearch = false;
 var isMathFirst = true;
 
 
-var timerRunner = false;
+window.timerRunner = false;
 
 getToken();
 try {
@@ -296,7 +297,9 @@ var onload = function()
 {
 
 };
+
 function getToken(force){
+    console.log("getToken" + force);
     var token = utools.db.get("token");
     var tokenTime = utools.db.get("token_time");
     if(token != null && tokenTime != null) {
@@ -336,6 +339,7 @@ function getToken(force){
 
 
 }
+window.getToken = getToken;
 /**
  * 搜索入口
  * @param modelF 搜索模式
@@ -344,38 +348,31 @@ function getToken(force){
  */
 var onSearch = function(modelF, searchWord, callbackSetList)
 {
+    window.callbackSetList = callbackSetList;
     try {
         model = modelF;
         //使用全局变量, 当值更改时定时器内及时获取最新值搜索
         inputValue.inpuValue = searchWord;
         if(utools.getUser() == null) {
-            utools.showNotification("请先登录!")
+            callbackSetList([
+                {
+                    title: '先登录Utools账号后使用',
+                    description: '在Utools账号与数据中登录',
+                    icon:'', // 图标
+                    url: ''
+                }
+            ])
+            utools.showNotification("请在Utools账号中登录")
             return;
         }
         getToken();
         if(inputValue.inpuValue !== '') {
             //如果定时器没运行, 则设置一个定时器, 指定延迟后执行, 执行完毕后清除定时器拦截
-            if (timerRunner === false) {
-                timerRunner = true;
+            if (window.timerRunner === false) {
+                window.timerRunner = true;
                 callbackSetList([]);
                 setTimeout(function () {
-                    // let transformData = youdaoGet();
-                    let transformData = ApiAdaptor.getListData(searchWord, model);
-                    console.log("transformData", transformData)
-                    if(transformData.errorMessage === null) {
-                        if (transformData.resultData === null) {
-                            utools.showNotification("接口没有返回信息嗷", null, false)
-                        }
-                    } else {
-                        if(transformData.errorMessage === "401") {
-                            getToken(true);
-                        } else {
-                            utools.showNotification(transformData.errorMessage, null, false)
-
-                        }
-                    }
-                    timerRunner = false;
-                    callbackSetList(transformData.resultData)
+                    ApiAdaptor.getListData(searchWord, model);
                 }, inputLag);
             }
         }
