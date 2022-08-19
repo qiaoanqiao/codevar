@@ -20,7 +20,7 @@ var promptText = '请输入要转化的文字';
 var inputValue = {inpuValue:""};
 
 /**
- * 输入延迟搜素时间(毫秒)
+ * 输入延迟搜索时间(毫秒)
  * @type {number}
  */
 var inputLag = 250;
@@ -43,7 +43,7 @@ var mathIsInSearch = false;
 var isMathFirst = true;
 
 
-window.timerRunner = false;
+var timeout = false;
 
 getToken();
 try {
@@ -367,14 +367,12 @@ var onSearch = function(modelF, searchWord, callbackSetList)
         }
         getToken();
         if(inputValue.inpuValue !== '') {
-            //如果定时器没运行, 则设置一个定时器, 指定延迟后执行, 执行完毕后清除定时器拦截
-            if (window.timerRunner === false) {
-                window.timerRunner = true;
-                callbackSetList([]);
-                setTimeout(function () {
-                    ApiAdaptor.getListData(searchWord, model);
-                }, inputLag);
-            }
+            //防抖
+            if(timeout) clearTimeout(timeout);
+            callbackSetList([]);
+            timeout=setTimeout(function () {
+                ApiAdaptor.getListData(searchWord, model);
+            }, inputLag);
         }
 
     } catch (e) {
