@@ -147,14 +147,18 @@ var ApiAdaptor = {
             ApiAdaptor.callbackSetList("如果续费支付成功,请稍等片刻继续使用!");
         } else if(data.code === 401) {
             if(ApiAdaptor.force > 3) {
+                    ApiAdaptor.force = 0;
                     ApiAdaptor.callbackSetList("接口token刷新重试超过三次依然校验失败");
             } else {
+                window.getToken(true);
                 ApiAdaptor.force +=1;
                 ApiAdaptor.getListData(ApiAdaptor.inputValue, ApiAdaptor.model);
             }
 
         } else {
-            ApiAdaptor.callbackSetList("接口请求网络位置状态码");
+            ApiAdaptor.force = 0;
+
+            ApiAdaptor.callbackSetList("接口请求网络未知状态码");
         }
     },
     callbackSetList(msg){

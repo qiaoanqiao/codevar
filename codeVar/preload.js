@@ -555,25 +555,34 @@ function select(text) {
         utools.hideMainWindow();
         utools.setSubInputValue('');
         utools.outPlugin();
-        paste();
+        paste(text);
     }
 }
 
 /**
  * 粘贴处理
  */
-function paste() {
+function paste(text) {
+    try {
+        let hideMainWindowTypeString = utools.hideMainWindowTypeString(text);
+        if(hideMainWindowTypeString !== true){
+            pasteSimulateKey();
+        }
+    } catch (e) {
+        pasteSimulateKey();
+    }
+}
+function pasteSimulateKey() {
     if (utools.isWindows()) {
         utools.simulateKeyboardTap('v', 'ctrl')
     }
     if (utools.isMacOs()) {
         utools.simulateKeyboardTap('v', 'command')
     }
-    if(utools.isLinux()) {
+    if (utools.isLinux()) {
         utools.simulateKeyboardTap('v', 'ctrl')
     }
 }
-
 /**
  * url 编码
  * @param param
