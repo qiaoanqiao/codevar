@@ -9,6 +9,8 @@ var ApiAdaptor = {
     force: 0,
     inputValue: '',
     model:'',
+    //增加数据缓存
+    caches:{},
     /**
      * 获取有道接口处理后的列表数据.
      * @returns {{resultData: null, errorMessage: null}}
@@ -16,6 +18,14 @@ var ApiAdaptor = {
      */
     getListData(inputValue, model)
     {
+        const cache=this.getCacheName(inputValue, model);
+        if(this.caches[cache])
+        {
+            console.log('缓存', inputValue);
+            window.callbackSetList(this.caches[cache]);
+            return;
+        }
+        console.log('查询', inputValue);
         if(ApiAdaptor.inputValue !== inputValue) {
             ApiAdaptor.force = 0;
         }
@@ -68,10 +78,9 @@ var ApiAdaptor = {
             } catch (e) {
             }
         }
-        xhr.onreadystatechange = function () {
-            window.timerRunner = false;
+        xhr.onreadystatechange = ()=> {
             if(xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
-                ApiAdaptor.success(xhr.responseText);
+                ApiAdaptor.success(xhr.responseText,cache, inputValue);
             }
         }
         try {
@@ -120,7 +129,7 @@ var ApiAdaptor = {
         //     }
         // });
     },
-    success(text, force){
+    success(text, cacheName,inputValue) {
         //7,获取返回值，解析json格式字符串为对象
         try {
             var data = JSON.parse(text);
@@ -129,8 +138,13 @@ var ApiAdaptor = {
         }
         if(data.code === 0) {
             ApiAdaptor.force = 0;
-
-            window.callbackSetList(data.data);
+            //只有查询关键词和当前关键词一致时才更新列表
+            if(inputValue==ApiAdaptor.inputValue)
+            {
+                console.log('展示', inputValue);
+                window.callbackSetList(data.data);
+            }
+            this.caches[cacheName] = data.data;
         } else if(data.code === 110) {
             ApiAdaptor.force = 0;
 
@@ -170,6 +184,10 @@ var ApiAdaptor = {
                 url: ''
             }
         ]);
+    },
+    getCacheName(input,model)
+    {
+        return model +"_ldg_" + input;
     }
 };
 
