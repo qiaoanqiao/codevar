@@ -134,7 +134,7 @@ var ApiAdaptor = {
         try {
             var data = JSON.parse(text);
         } catch (e) {
-            ApiAdaptor.callbackSetList("接口请求网络不通畅");
+            ApiAdaptor.callbackSetList("接口返回内容解析失败");
         }
         if(data.code === 0) {
             ApiAdaptor.force = 0;

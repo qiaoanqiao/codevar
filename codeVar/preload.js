@@ -291,6 +291,30 @@ window.exports = {
             }
         }
     },
+    "switch_paste_method": {
+        mode: "none",
+        args: {
+            // 进入插件时调用
+            enter: (action) => {
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('switch_paste_method');
+                if (whetherToShutDownAutomatical === null) {
+                    utools.showNotification("变量快速翻译命名插件将使用快捷键粘贴方式")
+                    utools.dbStorage.setItem('switch_paste_method', "1")
+                } else {
+                    if (whetherToShutDownAutomatical === "1") {
+                        utools.showNotification("变量快速翻译命名插件将使用模拟输入法输入粘贴方式")
+                        utools.dbStorage.setItem('switch_paste_method', "0")
+                    } else {
+                        utools.showNotification("变量快速翻译命名插件将使用快捷键粘贴方式")
+
+                        utools.dbStorage.setItem('switch_paste_method', "1")
+                    }
+                }
+                utools.hideMainWindow();
+                utools.outPlugin()
+            }
+        }
+    },
 };
 
 var onload = function()
@@ -561,12 +585,28 @@ function select(text) {
  * 粘贴处理
  */
 function paste(text) {
-    try {
-        let hideMainWindowTypeString = utools.hideMainWindowTypeString(text);
-        if(hideMainWindowTypeString !== true){
+    isIme = true; //是否输入法模式粘贴
+    switch_paste_method = utools.dbStorage.getItem('switch_paste_method');
+    if(switch_paste_method === null) {
+        utools.showNotification("变量快速翻译命名插件将使用模拟输入法输入粘贴方式, 如需设置请查看插件详情")
+        utools.dbStorage.setItem('switch_paste_method', "0")
+    } else {
+        if(switch_paste_method === "1") {
+            isIme = false;
+        } else {
+            isClose = true;
+        }
+    }
+    if(isIme) {
+        try {
+            let hideMainWindowTypeString = utools.hideMainWindowTypeString(text);
+            if(hideMainWindowTypeString !== true){
+                pasteSimulateKey();
+            }
+        } catch (e) {
             pasteSimulateKey();
         }
-    } catch (e) {
+    } else {
         pasteSimulateKey();
     }
 }
