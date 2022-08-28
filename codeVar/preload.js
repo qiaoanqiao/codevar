@@ -1,5 +1,5 @@
-window.codevarHost = "https://codevar-api.motouguai.com";
-// window.codevarHost = "http://127.0.0.1:8080";
+// window.codevarHost = "https://codevar-api.motouguai.com";
+window.codevarHost = "http://127.0.0.1:8080";
 const ApiAdaptor = require('./Adaptor/ApiAdaptor.js');
 const access_token = "";
 
@@ -71,9 +71,9 @@ window.exports = {
                 const ubWindow = utools.createBrowserWindow('setting.html', {
                     show: true,
                     title: '测试窗口',
-                    webPreferences: {
-                        preload: 'setting.js'
-                    }
+                    // webPreferences: {
+                    //     preload: 'setting.js'
+                    // }
                 });
                 ubWindow.webContents.openDevTools()
             }
