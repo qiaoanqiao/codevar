@@ -63,6 +63,22 @@ const sint= setInterval(()=>{
  * 插件进入对应模式响应
  */
 window.exports = {
+    "setting": { // 注意：键对应的是 plugin.json 中的 features.code
+        mode: "none",  // 用于无需 UI 显示，执行一些简单的代码
+        args: {
+            // 进入插件应用时调用
+            enter: (action) => {
+                const ubWindow = utools.createBrowserWindow('setting.html', {
+                    show: true,
+                    title: '测试窗口',
+                    webPreferences: {
+                        preload: 'setting.js'
+                    }
+                });
+                ubWindow.webContents.openDevTools()
+            }
+        }
+    },
     //转换内容为大驼峰命名格式
     "big_hump": {
         mode: "list",
@@ -216,10 +232,10 @@ window.exports = {
         args: {
             // 进入插件时调用
             enter: (action) => {
-                whetherToShutDownAutomatical = utools.dbStorage.getItem('whether_to_shut_down_automatical');
+                whetherToShutDownAutomatical = utools.dbStorage.getItem('any_text_match');
                 function any_text_matchOpen() {
                     utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于开启状态,可配合超级面板使用哦")
-                    utools.dbStorage.setItem('whether_to_shut_down_automatical', "1")
+                    utools.dbStorage.setItem('any_text_match', "1")
                     addany_text_match();
                 }
 
@@ -228,9 +244,10 @@ window.exports = {
                 } else {
                     if (whetherToShutDownAutomatical === "1") {
                         utools.showNotification("变量快速翻译命名插件是否任意文本匹配插件处于关闭状态")
-                        utools.dbStorage.setItem('whether_to_shut_down_automatical', "0")
+                        utools.dbStorage.setItem('any_text_match', "0")
                         removeany_text_match();
                     } else {
+                        utools.dbStorage.setItem('any_text_match', "1")
                         any_text_matchOpen();
                     }
                 }

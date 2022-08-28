@@ -8,6 +8,13 @@
     "logo": "logo.png",
     "features": [
         {
+            "code": "setting",
+            "explain": "设置中心",
+            "cmds": [
+                "变量快速翻译命名插件设置"
+            ]
+        },
+        {
             "code": "big_hump",
             "explain": "转换内容为大驼峰命名格式",
             "cmds": [
