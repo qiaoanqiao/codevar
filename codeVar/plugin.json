@@ -48,41 +48,6 @@
             "cmds": [
                 "常量", "cl"
             ]
-        },
-        {
-            "code": "whether_to_shut_down_automatical",
-            "explain": "切换变量快速翻译命名插件是否自动关闭设置",
-            "cmds": [
-                "变量快速翻译命名插件是否自动关闭"
-            ]
-        },
-        {
-            "code": "any_text_match",
-            "explain": "切换变量快速翻译命名插件是否任意文本匹配插件",
-            "cmds": [
-                "变量快速翻译命名插件是否任意文本匹配插件(可配合超级面板)"
-            ]
-        },
-        {
-            "code": "user_info",
-            "explain": "获取用户信息",
-            "cmds": [
-                "变量快速翻译命名插件获取用户信息"
-            ]
-        },
-        {
-            "code": "user_info_renew",
-            "explain": "续费",
-            "cmds": [
-                "变量快速翻译命名插件续费"
-            ]
-        },
-        {
-            "code": "switch_paste_method",
-            "explain": "切换粘贴方式",
-            "cmds": [
-                "变量快速翻译命名插件切换粘贴方式"
-            ]
         }
     ]
 }
