@@ -59,6 +59,19 @@ const sint= setInterval(()=>{
     } catch (e) {
     }
 },3080000);
+
+window.settingWindow = function (){
+    const ubWindow = utools.createBrowserWindow('./webdist/index.html', {
+        show: true,
+        title: '设置',
+        // webPreferences: {
+        //     preload: 'setting.js'
+        // }
+    }, () => {
+        // 显示
+        // ubWindow.show()
+    });
+};
 /**
  * 插件进入对应模式响应
  */
@@ -68,13 +81,7 @@ window.exports = {
         args: {
             // 进入插件应用时调用
             enter: (action) => {
-                const ubWindow = utools.createBrowserWindow('setting.html', {
-                    show: true,
-                    title: '测试窗口',
-                    // webPreferences: {
-                    //     preload: 'setting.js'
-                    // }
-                });
+                window.settingWindow();
             }
         }
     },
@@ -296,9 +303,12 @@ window.exports = {
                         utools.showNotification(data.msg);
                     } else if(data.code === 111) {
                         utools.showNotification(data.msg);
-                        utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                            utools.showNotification("续费成功,请稍等片刻继续使用!")
-                        })
+                        window.settingWindow();
+                        alert("data.msg");
+
+                        // utools.openPayment({ goodsId: data.data.goodsId }, () => {
+                        //     utools.showNotification("续费成功,请稍等片刻继续使用!")
+                        // })
                     }
 
                 })
@@ -333,10 +343,6 @@ window.exports = {
     },
 };
 
-var onload = function()
-{
-
-};
 
 function getToken(force){
     console.log("getToken" + force);
@@ -437,7 +443,11 @@ var onEnter = function(action, callbackSetList) {
     onload();
     callbackSetList([]);
 };
-
+var onload = function()
+{
+    var fundebug = require("fundebug-javascript");
+    fundebug.apikey = "20634a54043152c8d1a3a92054ad2412a1af0a591aaf11ed21ee5d046b4cb8d0";
+};
 /**
  * 选中事件
  * @param action

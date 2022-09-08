@@ -155,9 +155,11 @@ var ApiAdaptor = {
 
             utools.showNotification(data.msg);
             ApiAdaptor.callbackSetList(data.msg);
-            utools.openPayment({ goodsId: data.data.goodsId }, () => {
-                utools.showNotification("续费成功,请稍等片刻继续使用!")
-            })
+            window.settingWindow();
+            alert(data.msg);
+            // utools.openPayment({ goodsId: data.data.goodsId }, () => {
+            //     utools.showNotification("续费成功,请稍等片刻继续使用!")
+            // })
             ApiAdaptor.callbackSetList("如果续费支付成功,请稍等片刻继续使用!");
         } else if(data.code === 401) {
             if(ApiAdaptor.force > 3) {
