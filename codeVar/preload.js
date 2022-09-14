@@ -417,6 +417,14 @@ var onSearch = function(modelF, searchWord, callbackSetList)
             if(timeout) clearTimeout(timeout);
             callbackSetList([]);
             timeout=setTimeout(function () {
+                callbackSetList([
+                    {
+                        title: '正在搜索中...',
+                        description: '正在搜索中...',
+                        icon:'', // 图标
+                        url: ''
+                    }
+                ])
                 ApiAdaptor.getListData(searchWord, model);
             }, inputLag);
         }
@@ -620,7 +628,7 @@ function paste(text) {
         if(switch_paste_method === "1") {
             isIme = false;
         } else {
-            isClose = true;
+            isIme = true;
         }
     }
     if(isIme) {
